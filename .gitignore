@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Tests
+.vscode/
+.PgmasTest/
+*.pas
+MEPA
+
