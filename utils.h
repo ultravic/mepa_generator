@@ -106,8 +106,8 @@ node* newLabel(int, int);
 //remove os itens do nivel lexico mais alto
 int popStack(stack*, int);
 
-// //cria um procedimento
-// node* criaProcedimento(char*,int);
+//cria um procedimento
+node* newProcedure(char*, int);
 
 // //cria uma funcao
 // node* criaFuncao(int,char*,int);

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stack.h"
+#include "utils.h"
 #include "compilador.h"
 
 //-----------------------------------------------------
@@ -173,6 +173,20 @@ int popStack(stack *stk, int nvl_lex)
 
 //-----------------------------------------------------
 
+node* newProcedure(char* token, int nvl_lex)
+{
+	node *aux = (node*)malloc(sizeof(node));
+
+	aux->nvl_lex = nvl_lex;
+	aux->category = PROCEDIMENTO;
+
+	strcpy(aux->name, token);
+
+	return aux;
+}
+
+//-----------------------------------------------------
+
 // int alterarTipos(stack *p,int offset, int tipo){
 //   int i;
 //   int count=0;
@@ -186,13 +200,6 @@ int popStack(stack *stk, int nvl_lex)
 // }
 
 
-// node*criaProcedimento (char* token,int nivel){
-//   node*aux = (node)malloc(sizeof(node));
-//   aux->nl = nivel;
-//   aux->categoria = PROCEDIMENTO;
-//   strcpy(aux->nome,token);
-//   return aux;
-// }
 
 // node*criaFuncao (int tipo,char* token,int nivel ){
 //   node*aux = (node)malloc(sizeof(node));

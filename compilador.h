@@ -11,7 +11,7 @@
  *
  * ------------------------------------------------------------------- */
 
-#include "stack.h"
+#include "utils.h"
 #define TAM_TOKEN 16
 
 typedef enum simbolos { 

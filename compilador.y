@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
-#include "stack.h"
+#include "utils.h"
 
 extern int yylex(void);
 extern char *yytext;
@@ -32,7 +32,7 @@ node *aux_lab;
 
 int count_param;
 int i_index;
-int nvl_lex;
+int nl;
 
 char s[32];
 
@@ -61,6 +61,7 @@ programa:
 ;
 
 bloco: 
+            parte_declara_rotulos_opt
             parte_declara_vars
             {
                 geraRotulo(s);
@@ -72,7 +73,7 @@ bloco:
                 geraCodigo(NULL, s);
                 push(labels, temporary_lab);
             }
-
+            parte_declara_subrotinas_opt
             {
                 aux_lab = pop(labels);
                 sprintf(s, "%s", aux_lab->item.lab.label);
@@ -95,6 +96,37 @@ bloco:
                     }
                 }
             }
+;
+
+parte_declara_rotulos_opt:
+            | parte_declara_rotulos
+;
+
+parte_declara_rotulos:	
+            LABEL
+            NUMERO
+            {
+                temporary = newLabel(atoi(yytext), nvl_lex);
+                geraRotulo(temporary->item.lab.label);
+
+                push(symbols_table, temporary);
+                temporary = NULL;
+
+            }
+            parte_declara_rotulos_loop
+            PONTO_E_VIRGULA
+;
+
+parte_declara_rotulos_loop:
+            | VIRGULA NUMERO
+            {
+                temporary = newLabel(atoi(yytext), nvl_lex);
+                geraRotulo(temporary->item.lab.label);
+                
+                push(symbols_table, temporary);
+                temporary = NULL;
+            }
+            parte_declara_rotulos_loop
 ;
 
 parte_declara_vars:  
@@ -193,6 +225,7 @@ comando:
 ;
 
 comando_sem_label:
+            | chamada_procedimento
             | comando_composto
             | comando_condicional 
             | comando_repetitivo
@@ -205,7 +238,7 @@ comando_condicional:
             IF expressao
             {
                 geraRotulo(s);
-                temporary_lab = newLabel(s, nvl_lex);
+                temporary_lab = newLabel(s, nl);
 
                 strcpy(temporary_lab->item.lab.label, s);
                 push(labels, temporary_lab);
@@ -216,7 +249,7 @@ comando_condicional:
             THEN comando_sem_label
             {
                 geraRotulo(s);
-                temporary_lab = newLabel(s, nvl_lex);
+                temporary_lab = newLabel(s, nl);
 
                 strcpy(temporary_lab->item.lab.label, s);
                 sprintf(s, "DSVS %s", temporary_lab->item.lab.label);
@@ -244,7 +277,7 @@ comando_repetitivo:
             WHILE
             {
                 geraRotulo(s);
-                temporary_lab = newLabel(s, nvl_lex);
+                temporary_lab = newLabel(s, nl);
 
                 strcpy(temporary_lab->item.lab.label, s);
                 sprintf(s, "NADA");
@@ -255,7 +288,7 @@ comando_repetitivo:
             expressao
             {
                 geraRotulo(s);
-                temporary_lab = newLabel(s, nvl_lex);
+                temporary_lab = newLabel(s, nl);
 
                 strcpy(temporary_lab->item.lab.label, s);
                 sprintf(s, "DSVF %s", temporary_lab->item.lab.label);
@@ -340,6 +373,10 @@ lista_expressoes_loop:
                 }
             }
             lista_expressoes_loop
+;
+
+lista_expressoes_opt:
+            | ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
 ;
 
 expressao:
@@ -511,6 +548,128 @@ atribuicao:
                     }
                 }
             }
+;
+
+parte_declara_subrotinas_opt:
+            |
+            {
+                nl++;
+                nvl_lex++;
+                offset = 0;
+            }
+            parte_declara_subrotinas
+            {
+                nl--;
+                nvl_lex--;
+            }
+;
+
+parte_declara_subrotinas:
+            declaracao_procedimento PONTO_E_VIRGULA parte_declara_subrotinas_loop
+            | declaracao_funcao PONTO_E_VIRGULA parte_declara_subrotinas_loop
+;
+
+parte_declara_subrotinas_loop:
+            | parte_declara_subrotinas
+;
+
+declaracao_procedimento:
+            PROCEDURE identificador
+            {
+                proced = newProcedure(yytext, nvl_lex);
+                
+                geraRotulo(s);
+                strcpy(proced->item.func.label, s);
+
+                sprintf(s, "ENPR %d", nvl_lex);
+                geraCodigo(proced->item.func.label, s);
+            }
+            parametros_formais_opt PONTO_E_VIRGULA
+            {
+                proced->item.func.num_param = parameters->size;
+                offset = - 4;
+                i_index = parameters->size - 1;
+                proced->item.func.parameters = (variable*)malloc(sizeof(variable)*parameters->size);
+
+                push(symbols_table, proced);
+                
+                i_index = 0;
+                while (parameters->size) {
+                    temporary = pop(parameters);
+
+                    temporary->item.simple.offset = offset;
+                    temporary->item.simple.offset = - 4;
+
+                    push(symbols_table, newVariable(0, temporary->name, nvl_lex, offset, temporary->item.simple.parameter));
+                    offset--;
+                    proced->item.func.parameters[i_index] = temporary->item.simple;
+                    
+                    i_index++;
+                }
+                parameters->size = 0;
+                offset = 0;
+                proced = NULL;
+            }
+            bloco
+;
+
+chamada_procedimento:
+            identificador
+            {
+                if (!temporary) {
+                    yyerror("Procedimento nao declarado.");
+                    exit(1);
+                }
+                proced = temporary;
+                parameters->size = 0;
+                count_param = 0;
+            }
+            lista_expressoes_opt
+            {
+                sprintf(s, "CHPR %s, %d", proced->item.func.label, nvl_lex);
+                geraCodigo(NULL, s);
+                proced = NULL;
+            }
+;
+
+declaracao_funcao: 
+
+;
+
+parametros_formais_opt:
+            | parametros_formais
+;
+
+parametros_formais:
+            ABRE_PARENTESES secao_parametros_formais parametros_formais_loop FECHA_PARENTESES
+;
+
+parametros_formais_loop:
+            | PONTO_E_VIRGULA secao_parametros_formais parametros_formais_loop
+;
+
+secao_parametros_formais: 
+            lista_idents
+            {
+                for (i_index = 0; i_index < aux->size; i_index++) {
+                    temporary = &(aux->head[i_index]);
+                    temporary->item.simple.parameter = VALOR;
+                    push(parameters, temporary);
+                }
+                aux->size = 0;
+            }
+            DOIS_PONTOS tipo
+            | VAR  lista_idents
+            {
+                for (i_index = 0; i_index < aux->size; i_index++) {
+                    temporary = &(aux->head[i_index]);
+                    temporary->item.simple.parameter = REFERENCIA;
+                    temporary->nvl_lex = nvl_lex;
+                    push(parameters, temporary);
+                }
+                aux->size = 0;
+            }
+            DOIS_PONTOS tipo
 ;
 
 variavel:

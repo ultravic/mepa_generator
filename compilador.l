@@ -15,7 +15,7 @@ int nl = 1;
 
 pulo_linha [\n]
 descarte [\t ]+
-ident [a-zAZ][a-zAZ1-9]*
+ident [a-zA-Z][a-zA-Z0-9]*
 numero [0-9]+
 comentario "(*".*"*)"
 
@@ -133,7 +133,7 @@ read        {   simbolo = simb_read;
                 return READ;
             }
 
-\/         {   simbolo = simb_slash;
+"/"         {   simbolo = simb_slash;
                 strncpy(token, yytext, TAM_TOKEN);
                 IMPRIME("/ ");
                 return SLASH;
@@ -146,37 +146,37 @@ read        {   simbolo = simb_read;
             return ATRIBUICAO;  
         }
 
-\;      {   simbolo = simb_ponto_e_virgula;  
+";"      {   simbolo = simb_ponto_e_virgula;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" pont_e_virgula  ");
             return PONTO_E_VIRGULA;
         }
 
-\:      {   simbolo = simb_dois_pontos;  
+":"      {   simbolo = simb_dois_pontos;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" dois_pontos ");
             return DOIS_PONTOS;
         }
 
-\,      {   simbolo = simb_virgula;  
+","      {   simbolo = simb_virgula;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" virgula ");
             return VIRGULA;
         }
 
-\.      {   simbolo = simb_ponto;  
+"."      {   simbolo = simb_ponto;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" ponto ");
             return PONTO; 
         }
 
-\(      {   simbolo = simb_abre_parenteses;  
+"("      {   simbolo = simb_abre_parenteses;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" abre_parenteses  ");
             return ABRE_PARENTESES;
         }
 
-\)      {   simbolo = simb_fecha_parenteses;  
+")"      {   simbolo = simb_fecha_parenteses;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" fecha_parenteses ");
             return FECHA_PARENTESES;
@@ -194,19 +194,19 @@ read        {   simbolo = simb_read;
                 return NUMERO;
             }
 
-\+      {   simbolo = simb_mais;
+"+"      {   simbolo = simb_mais;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" mais ");
             return MAIS;
         }
 
-\-      {   simbolo = simb_menos;
+"-"      {   simbolo = simb_menos;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" menos ");
             return MENOS;
         }
 
-\*      {   simbolo = simb_vezes;
+"*"      {   simbolo = simb_vezes;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" vezes ");
             return VEZES;
@@ -218,7 +218,7 @@ read        {   simbolo = simb_read;
             return PONTO_PONTO;
         }
 
-\=      {   simbolo = simb_igual;
+"="      {   simbolo = simb_igual;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" igual ");
             return IGUAL;
@@ -230,13 +230,13 @@ read        {   simbolo = simb_read;
             return DIFERENTE;
         }
 
-\<      {   simbolo = simb_menor;
+"<"      {   simbolo = simb_menor;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" menor ");
             return MENOR;
         }
 
-\>      {  simbolo = simb_maior;
+">"      {  simbolo = simb_maior;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" maior ");
             return MAIOR;
