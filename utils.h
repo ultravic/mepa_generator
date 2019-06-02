@@ -109,18 +109,12 @@ int popStack(stack*, int);
 //cria um procedimento
 node* newProcedure(char*, int);
 
-// //cria uma funcao
-// node* criaFuncao(int,char*,int);
+//cria uma funcao
+node* newFunction(int, char*, int);
 
-
-
-
+int switchType(stack*, int, int);
 
 // //preenche o campo tipo das variaveis
 // void preencherTipo(stack*,int,int);
 
-
-
-
-// int alterarTipos(stack*,int,int);
 #endif

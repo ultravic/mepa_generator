@@ -31,7 +31,7 @@ node *temporary_lab;
 node *aux_lab;
 
 int count_param;
-int i_index;
+int i_index, j_index;;
 int nl;
 
 char s[32];
@@ -61,7 +61,6 @@ programa:
 ;
 
 bloco: 
-            parte_declara_rotulos_opt
             parte_declara_vars
             {
                 geraRotulo(s);
@@ -78,9 +77,10 @@ bloco:
                 aux_lab = pop(labels);
                 sprintf(s, "%s", aux_lab->item.lab.label);
                 geraCodigo(s, "NADA");
+                printStack(symbols_table);
             }
             comando_composto
-            {
+            {                
                 offset = popStack(symbols_table, nvl_lex);
                 
                 if (offset) {
@@ -157,6 +157,7 @@ declara_var:
                     } else {
                         type = 1;
                     }
+                    switchType(symbols_table, offset, type);
                     
                 }
                 PONTO_E_VIRGULA
@@ -226,6 +227,7 @@ comando:
 
 comando_sem_label:
             | chamada_procedimento
+            | chamada_funcao
             | comando_composto
             | comando_condicional 
             | comando_repetitivo
@@ -382,7 +384,8 @@ lista_expressoes_opt:
 expressao:
             expressao_simples
             { 
-                if (proced || funct) count_param++; 
+                if (proced || funct) count_param++;
+                printf(">>>>>>> %d\n", count_param);
             }
             | expressao_simples IGUAL expressao_simples 
             {
@@ -477,14 +480,14 @@ termo_loop:
 
 fator: 
             variavel
-            { 
+            {
                 if (temporary) {
-                    if ((proced) && count_param >= proced->item.func.num_param ) {
+                    if ((proced) && count_param >= proced->item.func.num_param) {
                         yyerror("Procedimento chamado com numero invalido de count_param.");
                         exit(1);
                     }
-                    if ((funct) && count_param > funct->item.func.num_param ) {
-                        printf("esperado: %d, %d encontrados\n\n",funct->item.func.num_param,count_param);
+                    if ((funct) && count_param > funct->item.func.num_param) {
+                        printf("esperado: %d, %d encontrados\n\n", funct->item.func.num_param, count_param);
                         exit(1);
                     }
                     if ((proced) && proced->item.func.parameters[count_param].parameter == REFERENCIA) {
@@ -633,7 +636,73 @@ chamada_procedimento:
 ;
 
 declaracao_funcao: 
+            FUNCTION
+            {
+            }
+            identificador
+            {
+                funct = newFunction(0, yytext, nvl_lex);
+                geraRotulo(s);
+                strcpy(funct->item.func.label, s);
 
+                sprintf(s,"ENPR %d", nvl_lex);
+                geraCodigo(funct->item.func.label, s);
+            }
+            parametros_formais_opt 
+            {
+                funct->item.func.num_param = parameters->size;
+                offset = - 4;
+                i_index = parameters->size - 1;
+                funct->item.func.parameters = (variable*)malloc(sizeof(variable)*parameters->size);
+                push(symbols_table, funct);
+                //nivel++;
+                while (parameters->size) {
+                    temporary = pop(parameters);
+                    temporary->item.simple.offset = offset;
+                    push(symbols_table, newVariable(0, temporary->name, nvl_lex, offset, temporary->item.simple.parameter));
+                    offset--;
+                    //     push(ts,noTemp);
+                    funct->item.func.parameters[i_index] = temporary->item.simple;
+                    i_index--;
+                }
+                parameters->size = 0;
+                offset = 0;
+            }
+            DOIS_PONTOS identificador
+            {
+                int j;
+                for (j = symbols_table->size - 1; j >= 0; j--) {
+                    if (symbols_table->head[j].category == FUNCAO) {
+                        symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
+                        symbols_table->head[j].item.func.type = 7;
+                        break;
+                    }
+                }
+
+            } PONTO_E_VIRGULA 
+            bloco
+;
+
+chamada_funcao:
+        identificador
+        {
+            call_flag = 1;
+            if (!temporary) {
+                yyerror("funcao nao declarada.");
+                exit(1);
+            }
+            geraCodigo(NULL, "AMEM 1");
+            funct = temporary;
+            parameters->size = 0;
+            count_param = 0;
+        }
+        lista_expressoes_opt
+        { 	
+            sprintf(s, "CHPR %s, %d", funct->item.func.label, nvl_lex);
+            geraCodigo(NULL, s);
+            funct = NULL;
+            call_flag = 0;
+        }
 ;
 
 parametros_formais_opt:
@@ -718,7 +787,7 @@ int main (int argc, char** argv) {
     yyparse();
     fclose(fp);
 
-    printStack(symbols_table);
+    // printStack(symbols_table);
 
     return 0;
 }

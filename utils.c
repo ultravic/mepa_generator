@@ -88,7 +88,7 @@ void printStack(stack *stk)
 		if (stk->head[index].category == FUNCAO) {
 			printf("offset: %d\tparams: %d", aux.item.func.offset, aux.item.func.num_param);
 			for (jndex = 0; jndex < aux.item.func.num_param; jndex++)
-				printf("\tp %d : %d", jndex, aux.item.func.parameters[jndex].parameter);
+				printf("\tp%d: %d", jndex, aux.item.func.parameters[jndex].parameter);
 		}
 		printf("\n");
 	}
@@ -187,26 +187,33 @@ node* newProcedure(char* token, int nvl_lex)
 
 //-----------------------------------------------------
 
-// int alterarTipos(stack *p,int offset, int tipo){
-//   int i;
-//   int count=0;
-//   for (i=p->tamanho-1;i>=p->tamanho-offset;i--){
-//           if (p->primeiro[i].categoria==VS){
-//                   p->primeiro[i].item.vs.tipo = tipo;
-//                   count++;
-//           }
-//   }
-//   return count;
-// }
+node* newFunction(int type, char* token, int nvl_lex)
+{
+	node *aux = (node*)malloc(sizeof(node));
 
+	aux->nvl_lex = nvl_lex;
+	aux->category = FUNCAO;
 
+	strcpy(aux->name, token);
 
-// node*criaFuncao (int tipo,char* token,int nivel ){
-//   node*aux = (node)malloc(sizeof(node));
-//   aux->nl = nivel;
-//   aux->categoria = FUNCAO;
-//   strcpy(aux->nome,token);
-//   return aux;
-// }
+	return aux;
+}
+
+//-----------------------------------------------------
+
+int switchType(stack *stk, int offset, int type)
+{
+	int index;
+	int count = 0;
+
+	for (index = stk->size - 1; index >= stk->size - offset; index--) {
+		if (stk->head[index].category == VS) {
+			stk->head[index].item.simple.type = type;
+			count++;
+		}
+	}
+
+	return count;
+}
 
 #endif
