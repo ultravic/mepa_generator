@@ -133,6 +133,12 @@ read        {   simbolo = simb_read;
                 return READ;
             }
 
+goto        {   simbolo = simb_goto;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME("goto ");
+                return GOTO;
+            }
+
 "/"         {   simbolo = simb_slash;
                 strncpy(token, yytext, TAM_TOKEN);
                 IMPRIME("/ ");

@@ -44,7 +44,7 @@ char s[32];
 %token OR AND NOT MAIOR MENOR MAIOR_IGUAL MENOR_IGUAL
 %token IGUAL WRITE READ SLASH VEZES NUMERO MAIS MENOS
 %token PONTO_PONTO WHILE IF THEN ELSE DO DIV
-%token PROCEDURE FUNCTION LABEL DIFERENTE
+%token PROCEDURE FUNCTION LABEL DIFERENTE GOTO
 
 %%
 
@@ -61,6 +61,7 @@ programa:
 ;
 
 bloco: 
+            parte_declara_rotulos_opt
             parte_declara_vars
             {
                 geraRotulo(s);
@@ -80,7 +81,7 @@ bloco:
                 printStack(symbols_table);
             }
             comando_composto
-            {                
+            {   
                 offset = popStack(symbols_table, nvl_lex);
                 
                 if (offset) {
@@ -233,7 +234,8 @@ comando_sem_label:
             | comando_repetitivo
             | comando_escrita
             | comando_leitura
-            | atribuicao 
+            | atribuicao
+            | desvio
 ;
 
 comando_condicional:
@@ -377,15 +379,10 @@ lista_expressoes_loop:
             lista_expressoes_loop
 ;
 
-lista_expressoes_opt:
-            | ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
-;
-
 expressao:
             expressao_simples
             { 
                 if (proced || funct) count_param++;
-                printf(">>>>>>> %d\n", count_param);
             }
             | expressao_simples IGUAL expressao_simples 
             {
@@ -481,6 +478,7 @@ termo_loop:
 fator: 
             variavel
             {
+
                 if (temporary) {
                     if ((proced) && count_param >= proced->item.func.num_param) {
                         yyerror("Procedimento chamado com numero invalido de count_param.");
@@ -513,17 +511,19 @@ fator:
                         }
                     }
                 }
-            }
+            }          
             | numero 
             {
                 sprintf(s, "CRCT %s", yytext);
                 geraCodigo(NULL, s);
             }
+            | chamada_funcao
             | ABRE_PARENTESES expressao FECHA_PARENTESES
             | NOT fator 
             {
                 geraCodigo(NULL, "NEGA");
             }
+            |
 ;
 
 atribuicao:  
@@ -627,8 +627,24 @@ chamada_procedimento:
                 parameters->size = 0;
                 count_param = 0;
             }
-            lista_expressoes_opt
+            ABRE_PARENTESES lista_expressoes
             {
+                sprintf(s, "CHPR %s, %d", proced->item.func.label, nvl_lex);
+                geraCodigo(NULL, s);
+                proced = NULL;
+            }
+            FECHA_PARENTESES
+            |
+            identificador
+            {
+                if (!temporary) {
+                    yyerror("Procedimento nao declarado.");
+                    exit(1);
+                }
+                proced = temporary;
+                parameters->size = 0;
+                count_param = 0;
+
                 sprintf(s, "CHPR %s, %d", proced->item.func.label, nvl_lex);
                 geraCodigo(NULL, s);
                 proced = NULL;
@@ -696,13 +712,14 @@ chamada_funcao:
             parameters->size = 0;
             count_param = 0;
         }
-        lista_expressoes_opt
+        ABRE_PARENTESES lista_expressoes
         { 	
             sprintf(s, "CHPR %s, %d", funct->item.func.label, nvl_lex);
             geraCodigo(NULL, s);
             funct = NULL;
             call_flag = 0;
         }
+        FECHA_PARENTESES
 ;
 
 parametros_formais_opt:
@@ -739,6 +756,20 @@ secao_parametros_formais:
                 aux->size = 0;
             }
             DOIS_PONTOS tipo
+;
+
+desvio: 
+            GOTO NUMERO
+            {
+                temporary = find(symbols_table, yytext);
+                if (temporary) {
+                    sprintf(s, "DSVR %s, %d, %d", temporary->item.lab.label, temporary->nvl_lex, nvl_lex);
+                    geraCodigo(NULL, s);
+                } else {
+                    yyerror("Label nao declarado.");
+                    exit(1);
+                }
+            }
 ;
 
 variavel:
