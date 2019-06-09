@@ -139,6 +139,30 @@ goto        {   simbolo = simb_goto;
                 return GOTO;
             }
 
+integer     {   simbolo = simb_integer;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME("integer");
+                return INTEGER;
+            }
+
+boolean     {   simbolo = simb_boolean;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME("boolean");
+                return BOOLEAN;
+            }
+
+true        {   simbolo = simb_true;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME(" true");
+                return TRUE;
+            }
+
+false       {   simbolo = simb_false;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME(" false");
+                return FALSE;
+            }
+
 "/"         {   simbolo = simb_slash;
                 strncpy(token, yytext, TAM_TOKEN);
                 IMPRIME("/ ");

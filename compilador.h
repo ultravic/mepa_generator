@@ -53,7 +53,11 @@ typedef enum simbolos {
   simb_label,
   simb_procedure,
   simb_do,
-  simb_else
+  simb_else,
+  simb_boolean,
+  simb_true,
+  simb_false,
+  simb_integer
 } simbolos;
 
 

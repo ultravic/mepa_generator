@@ -84,7 +84,7 @@ void printStack(stack *stk)
 		printf("%s %d %d \t", aux.name, aux.category, aux.nvl_lex);
 
 		if (stk->head[index].category == VS)
-			printf("offset: %d\tpassagem: %d", aux.item.simple.offset, aux.item.simple.parameter);
+			printf("offset: %d\tpassagem: %d\t tipo: %d", aux.item.simple.offset, aux.item.simple.parameter, aux.item.simple.type);
 		if (stk->head[index].category == FUNCAO) {
 			printf("offset: %d\tparams: %d", aux.item.func.offset, aux.item.func.num_param);
 			for (jndex = 0; jndex < aux.item.func.num_param; jndex++)

@@ -18,6 +18,7 @@ int nvl_lex = 0;
 int offset = 0;
 int write = 0;
 int call_flag = 0;
+int type_rst = 0;
 
 stack *aux;
 stack *labels;
@@ -45,6 +46,7 @@ char s[32];
 %token IGUAL WRITE READ SLASH VEZES NUMERO MAIS MENOS
 %token PONTO_PONTO WHILE IF THEN ELSE DO DIV
 %token PROCEDURE FUNCTION LABEL DIFERENTE GOTO
+%token INTEGER BOOLEAN TRUE FALSE 
 
 %%
 
@@ -150,18 +152,6 @@ declara_vars:
 
 declara_var:    
                 lista_idents DOIS_PONTOS 
-                tipo 
-                { /* AMEM */
-                    int type;
-                    if (!strcmp(yytext, "integer")) {
-                        type = 7;
-                    } else {
-                        type = 1;
-                    }
-                    switchType(symbols_table, offset, type);
-                    
-                }
-                PONTO_E_VIRGULA
                 {
                     if (aux->size) {
                         sprintf(s, "AMEM %d", aux->size);
@@ -173,10 +163,23 @@ declara_var:
                     }
                     aux->size = 0;
                 }
+                tipo 
+                PONTO_E_VIRGULA
 ;
 
 tipo:   
-            IDENT
+            INTEGER
+            {
+                switchType(symbols_table, offset, 7);
+            }
+            | BOOLEAN
+            {
+                switchType(symbols_table, offset, 8);                    
+            }
+            | IDENT
+            {
+                switchType(symbols_table, offset, 1);
+            }
 ;
 
 lista_idents:	
@@ -335,7 +338,7 @@ comando_leitura_1:
                 sprintf(s, "LEIT");
                 geraCodigo(NULL, s);
             }
-            variavel
+            identificador
             {
                 if (!temporary) {
                     yyerror("Variavel nao declarada.");
@@ -389,36 +392,84 @@ expressao:
                 if (proced || funct) count_param++; 
                 sprintf(s, "CMIG");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
             | expressao_simples DIFERENTE expressao_simples 
             {
-                if (proced || funct) count_param++; 
+                if (proced || funct) count_param++;
                 sprintf(s, "CMDG");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
             | expressao_simples MENOR expressao_simples 
             {
                 if (proced || funct) count_param++; 
                 sprintf(s, "CMME");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
             | expressao_simples MAIOR expressao_simples 
             {
                 if (proced || funct) count_param++; 
                 sprintf(s, "CMMA");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
             | expressao_simples MAIOR_IGUAL expressao_simples 
             {
                 if (proced || funct) count_param++; 
                 sprintf(s, "CMAG");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
             | expressao_simples MENOR_IGUAL expressao_simples 
             {
                 if (proced || funct) count_param++; 
                 sprintf(s, "CMEG");
                 geraCodigo(NULL, s);
+                if (temporary_var) {
+                    if (temporary_var->category == VS) {
+                        if (temporary_var->item.simple.type != 8) {
+                            yyerror("Atribuição incorreta.");
+                            exit(1);
+                        }
+                    }
+                }
             }
 ;
  
@@ -476,7 +527,7 @@ termo_loop:
 ;
 
 fator: 
-            variavel
+            identificador
             {
 
                 if (temporary) {
@@ -488,10 +539,15 @@ fator:
                         printf("esperado: %d, %d encontrados\n\n", funct->item.func.num_param, count_param);
                         exit(1);
                     }
-                    if ((proced) && proced->item.func.parameters[count_param].parameter == REFERENCIA) {
-                        sprintf(s, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                        geraCodigo(NULL, s);
-                    } else {
+                    if ((proced) && proced->item.func.parameters[(proced->item.func.num_param - 1) - count_param].parameter == REFERENCIA) {
+                        if (temporary->item.simple.parameter == REFERENCIA) {
+                            sprintf(s, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                            geraCodigo(NULL, s);
+                        } else {
+                            sprintf(s, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                            geraCodigo(NULL, s);
+                        }
+                    } else {                        
                         if ((funct) && funct->item.func.parameters[count_param].parameter == REFERENCIA) {
                             if (call_flag) {
                                 sprintf(s, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
@@ -500,7 +556,7 @@ fator:
                                 sprintf(s, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                                 geraCodigo(NULL, s);
                             }
-                        } else { 
+                        } else {
                             if (temporary->item.simple.parameter == REFERENCIA) {
                                 sprintf(s, "CRVI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                                 geraCodigo(NULL, s);
@@ -512,9 +568,19 @@ fator:
                     }
                 }
             }          
-            | numero 
+            | NUMERO 
             {
                 sprintf(s, "CRCT %s", yytext);
+                geraCodigo(NULL, s);
+            }
+            | TRUE
+            {
+                sprintf(s, "CRCT 1");
+                geraCodigo(NULL, s);
+            }
+            | FALSE
+            {
+                sprintf(s, "CRCT 0");
                 geraCodigo(NULL, s);
             }
             | chamada_funcao
@@ -527,7 +593,7 @@ fator:
 ;
 
 atribuicao:  
-            variavel
+            identificador
             {
                 temporary_var = temporary;
             }
@@ -537,7 +603,7 @@ atribuicao:
                     yyerror("Variavel nao declarada.");
                     exit(1);
                 }
-
+            
                 if (temporary_var->category == FUNCAO) {
                     sprintf(s, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.func.offset);
                     geraCodigo(NULL, s);
@@ -550,6 +616,8 @@ atribuicao:
                         geraCodigo(NULL, s);
                     }
                 }
+                temporary_var = NULL;
+                type_rst = 0;
             }
 ;
 
@@ -602,7 +670,6 @@ declaracao_procedimento:
 
                     temporary->item.simple.offset = offset;
                     temporary->item.simple.offset = - 4;
-
                     push(symbols_table, newVariable(0, temporary->name, nvl_lex, offset, temporary->item.simple.parameter));
                     offset--;
                     proced->item.func.parameters[i_index] = temporary->item.simple;
@@ -671,30 +738,38 @@ declaracao_funcao:
                 i_index = parameters->size - 1;
                 funct->item.func.parameters = (variable*)malloc(sizeof(variable)*parameters->size);
                 push(symbols_table, funct);
-                //nivel++;
+                
                 while (parameters->size) {
                     temporary = pop(parameters);
                     temporary->item.simple.offset = offset;
                     push(symbols_table, newVariable(0, temporary->name, nvl_lex, offset, temporary->item.simple.parameter));
                     offset--;
-                    //     push(ts,noTemp);
                     funct->item.func.parameters[i_index] = temporary->item.simple;
                     i_index--;
                 }
                 parameters->size = 0;
                 offset = 0;
             }
-            DOIS_PONTOS identificador
+            DOIS_PONTOS tipo
             {
                 int j;
-                for (j = symbols_table->size - 1; j >= 0; j--) {
-                    if (symbols_table->head[j].category == FUNCAO) {
-                        symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
-                        symbols_table->head[j].item.func.type = 7;
-                        break;
+                if (!strcmp(yytext, "boolean")) {
+                    for (j = symbols_table->size - 1; j >= 0; j--) {
+                        if (symbols_table->head[j].category == FUNCAO) {
+                            symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
+                            symbols_table->head[j].item.func.type = 8;
+                            break;
+                        }
+                    }
+                } else {
+                    for (j = symbols_table->size - 1; j >= 0; j--) {
+                        if (symbols_table->head[j].category == FUNCAO) {
+                            symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
+                            symbols_table->head[j].item.func.type = 7;
+                            break;
+                        }
                     }
                 }
-
             } PONTO_E_VIRGULA 
             bloco
 ;
@@ -745,7 +820,7 @@ secao_parametros_formais:
                 aux->size = 0;
             }
             DOIS_PONTOS tipo
-            | VAR  lista_idents
+            | VAR lista_idents
             {
                 for (i_index = 0; i_index < aux->size; i_index++) {
                     temporary = &(aux->head[i_index]);
@@ -772,19 +847,11 @@ desvio:
             }
 ;
 
-variavel:
-        identificador
-;
-
 identificador:
         IDENT
         {
             temporary = find(symbols_table, yytext);
         }
-;
-
-numero:
-        NUMERO
 ;
 
 %%
@@ -804,7 +871,6 @@ int main (int argc, char** argv) {
         return(-1);
     }
 
-
 /* -------------------------------------------------------------------
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
@@ -818,7 +884,7 @@ int main (int argc, char** argv) {
     yyparse();
     fclose(fp);
 
-    // printStack(symbols_table);
+    printStack(symbols_table);
 
     return 0;
 }
