@@ -46,7 +46,7 @@ char str_tmp[32];
 %token IGUAL WRITE READ VEZES NUMERO MAIS MENOS
 %token WHILE IF THEN ELSE DO DIV
 %token PROCEDURE FUNCTION LABEL DIFERENTE GOTO
-%token INTEGER BOOLEAN TRUE FALSE 
+%token INTEGER BOOLEAN TRUE FALSE FORWARD
 
 %%
 
@@ -93,7 +93,7 @@ block:
 
                 if (symbols_table->size) {
                     temporary = &(symbols_table->head[symbols_table->size-1]);
-                    if (temporary->category == PROCEDIMENTO || temporary->category == FUNCAO) {
+                    if (temporary->category == PROCEDURE_TP || temporary->category == FUNCTION_TP) {
                         sprintf(str_tmp, "RTPR %d, %d", nvl_lex, temporary->item.func.num_param);	
                         geraCodigo(NULL, str_tmp);
                     }
@@ -179,7 +179,7 @@ ident_lists:
             identificator
             {
                 if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
-                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
+                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLE_TP);
                     push(aux, var_label);
                     offset++;
                 }
@@ -191,7 +191,7 @@ ident_lists_lp:
             | VIRGULA identificator
             {
                 if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
-                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
+                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLE_TP);
                     push(aux, var_label);
                     offset++;
                 }
@@ -338,11 +338,11 @@ read_section:
                     yyerror("Variavel nao declarada.");
                     exit(1);
                 }
-                if (temporary->item.simple.parameter == REFERENCIA) {
+                if (temporary->item.simple.parameter == REFERENCE_TP) {
                     sprintf(str_tmp, "ARMI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                     geraCodigo(NULL, str_tmp);
                 }
-                else if (temporary->item.simple.parameter == VALOR || temporary->item.simple.parameter == SIMPLES) {
+                else if (temporary->item.simple.parameter == VALUE_TP || temporary->item.simple.parameter == SIMPLE_TP) {
                     sprintf(str_tmp, "ARMZ %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                     geraCodigo(NULL, str_tmp);
                 }
@@ -533,8 +533,8 @@ element:
                         printf("esperado: %d, %d encontrados\n\n", funct->item.func.num_param, count_param);
                         exit(1);
                     }
-                    if ((proced) && proced->item.func.parameters[(proced->item.func.num_param - 1) - count_param].parameter == REFERENCIA) {
-                        if (temporary->item.simple.parameter == REFERENCIA) {
+                    if ((proced) && proced->item.func.parameters[(proced->item.func.num_param - 1) - count_param].parameter == REFERENCE_TP) {
+                        if (temporary->item.simple.parameter == REFERENCE_TP) {
                             sprintf(str_tmp, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                             geraCodigo(NULL, str_tmp);
                         } else {
@@ -542,7 +542,7 @@ element:
                             geraCodigo(NULL, str_tmp);
                         }
                     } else {                        
-                        if ((funct) && funct->item.func.parameters[count_param].parameter == REFERENCIA) {
+                        if ((funct) && funct->item.func.parameters[count_param].parameter == REFERENCE_TP) {
                             if (call_flag) {
                                 sprintf(str_tmp, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                                 geraCodigo(NULL, str_tmp);
@@ -551,7 +551,7 @@ element:
                                 geraCodigo(NULL, str_tmp);
                             }
                         } else {
-                            if (temporary->item.simple.parameter == REFERENCIA) {
+                            if (temporary->item.simple.parameter == REFERENCE_TP) {
                                 sprintf(str_tmp, "CRVI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
                                 geraCodigo(NULL, str_tmp);
                             } else {
@@ -598,11 +598,11 @@ assignment:
                     exit(1);
                 }
             
-                if (temporary_var->category == FUNCAO) {
+                if (temporary_var->category == FUNCTION_TP) {
                     sprintf(str_tmp, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.func.offset);
                     geraCodigo(NULL, str_tmp);
                 } else {
-                    if (temporary_var->item.simple.parameter == REFERENCIA) {
+                    if (temporary_var->item.simple.parameter == REFERENCE_TP) {
                         sprintf(str_tmp, "ARMI %d, %d", temporary_var->nvl_lex, temporary_var->item.simple.offset);
                         geraCodigo(NULL, str_tmp);
                     } else {
@@ -632,19 +632,27 @@ routine_declaration:
 routine_declaration_lp:
             procedure_declaration PONTO_E_VIRGULA routine_declaration_lp
             | function_declaration PONTO_E_VIRGULA routine_declaration_lp
-            |
+            | 
 ;
 
 procedure_declaration:
             PROCEDURE identificator
             {
-                proced = newProcedure(yytext, nvl_lex);
-                
-                geraRotulo(str_tmp);
-                strcpy(proced->item.func.label, str_tmp);
+                temporary = find(symbols_table, yytext);
 
-                sprintf(str_tmp, "ENPR %d", nvl_lex);
-                geraCodigo(proced->item.func.label, str_tmp);
+                if (!temporary) {
+                    proced = newProcedure(yytext, nvl_lex);
+                    
+                    geraRotulo(str_tmp);
+                    strcpy(proced->item.func.label, str_tmp);
+
+                    sprintf(str_tmp, "ENPR %d", nvl_lex);
+                    geraCodigo(proced->item.func.label, str_tmp);
+                } else {
+                    proced = temporary;
+                    sprintf(str_tmp, "ENPR %d", nvl_lex);
+                    geraCodigo(proced->item.func.label_f, str_tmp);
+                }
             }
             parameters PONTO_E_VIRGULA
             {
@@ -667,10 +675,34 @@ procedure_declaration:
                     
                     i_index++;
                 }
+            }
+            forward
+;
+
+forward:
+            FORWARD
+            {
+                geraRotulo(str_tmp);
+                strcpy(proced->item.func.label_f, str_tmp);
+
+                temporary_lab = newLabel(atoi(str_tmp), nvl_lex);
+
+                strcpy(temporary_lab->item.lab.label, str_tmp);
+                sprintf(str_tmp, "DSVS %s", temporary_lab->item.lab.label);
+
+                geraCodigo(NULL, str_tmp);
+                push(labels, temporary_lab);
+                
                 parameters->size = 0;
                 offset = 0;
                 proced = NULL;
             }
+            | 
+            {
+                parameters->size = 0;
+                offset = 0;
+                proced = NULL;
+            } 
             block
 ;
 
@@ -746,7 +778,7 @@ function_declaration:
                 int j;
                 if (!strcmp(yytext, "boolean")) {
                     for (j = symbols_table->size - 1; j >= 0; j--) {
-                        if (symbols_table->head[j].category == FUNCAO) {
+                        if (symbols_table->head[j].category == FUNCTION_TP) {
                             symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
                             symbols_table->head[j].item.func.type = 8;
                             break;
@@ -754,7 +786,7 @@ function_declaration:
                     }
                 } else {
                     for (j = symbols_table->size - 1; j >= 0; j--) {
-                        if (symbols_table->head[j].category == FUNCAO) {
+                        if (symbols_table->head[j].category == FUNCTION_TP) {
                             symbols_table->head[j].item.func.offset = - 4 - symbols_table->head[j].item.func.num_param;
                             symbols_table->head[j].item.func.type = 7;
                             break;
@@ -801,7 +833,7 @@ parameters_section:
             {
                 for (i_index = 0; i_index < aux->size; i_index++) {
                     temporary = &(aux->head[i_index]);
-                    temporary->item.simple.parameter = VALOR;
+                    temporary->item.simple.parameter = VALUE_TP;
                     push(parameters, temporary);
                 }
                 aux->size = 0;
@@ -811,7 +843,7 @@ parameters_section:
             {
                 for (i_index = 0; i_index < aux->size; i_index++) {
                     temporary = &(aux->head[i_index]);
-                    temporary->item.simple.parameter = REFERENCIA;
+                    temporary->item.simple.parameter = REFERENCE_TP;
                     temporary->nvl_lex = nvl_lex;
                     push(parameters, temporary);
                 }

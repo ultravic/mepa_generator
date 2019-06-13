@@ -163,6 +163,12 @@ false       {   simbolo = simb_false;
                 return FALSE;
             }
 
+forward     {   simbolo = simb_forward;
+                strncpy(token, yytext, TAM_TOKEN);
+                IMPRIME(" forward");
+                return FORWARD;
+            }
+
 ":="      {   simbolo = simb_atribuicao;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" atribuicao  ");

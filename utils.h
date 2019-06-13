@@ -3,14 +3,14 @@
 
 #define STACK_SIZE 1000
 
-#define VS 0
-#define PROCEDIMENTO 1
-#define FUNCAO 2
-#define ROTULO 3
+#define PROCEDURE_TP 1
+#define REFERENCE_TP 0
+#define FUNCTION_TP 2
+#define SIMPLE_TP 1
+#define LABEL_TP 3
+#define VALUE_TP 2
 #define MAX 32
-#define REFERENCIA 0
-#define SIMPLES 1
-#define VALOR 2
+#define VS 0
 
 // Base data types
 
@@ -30,6 +30,7 @@ typedef struct {
 	int offset;
 	variable *parameters;
 	char label[MAX];
+	char label_f[MAX];
 } function;
 
 union types {

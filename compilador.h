@@ -28,7 +28,6 @@ typedef enum simbolos {
   simb_atribuicao, 
   simb_abre_parenteses, 
   simb_fecha_parenteses, 
-  simb_slash,
   simb_menor,
   simb_menor_igual,
   simb_maior,
@@ -41,7 +40,6 @@ typedef enum simbolos {
   simb_or,
   simb_and,
   simb_not,
-  simb_ponto_ponto,
   simb_div, 
   simb_while,
   simb_write,
@@ -57,7 +55,8 @@ typedef enum simbolos {
   simb_boolean,
   simb_true,
   simb_false,
-  simb_integer
+  simb_integer,
+  simb_forward
 } simbolos;
 
 

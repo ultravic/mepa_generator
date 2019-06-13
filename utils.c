@@ -85,7 +85,7 @@ void printStack(stack *stk)
 
 		if (stk->head[index].category == VS)
 			printf("offset: %d\tpassagem: %d\t tipo: %d", aux.item.simple.offset, aux.item.simple.parameter, aux.item.simple.type);
-		if (stk->head[index].category == FUNCAO) {
+		if (stk->head[index].category == FUNCTION_TP) {
 			printf("offset: %d\tparams: %d", aux.item.func.offset, aux.item.func.num_param);
 			for (jndex = 0; jndex < aux.item.func.num_param; jndex++)
 				printf("\tp%d: %d", jndex, aux.item.func.parameters[jndex].parameter);
@@ -106,7 +106,7 @@ int checkOffset(stack *stk, int nvl_lex)
 		aux = stk->head[index];
 
 		if (aux.nvl_lex < nvl_lex) break;
-		if (aux.category == VS && aux.item.simple.parameter == SIMPLES)
+		if (aux.category == VS && aux.item.simple.parameter == SIMPLE_TP)
 			count++;
 
 		index--;
@@ -136,7 +136,7 @@ node* newLabel(int label, int nvl_lex)
 	char convert[MAX];
 
 	aux->nvl_lex = nvl_lex;
-	aux->category = ROTULO;
+	aux->category = LABEL_TP;
 
 	sprintf(convert, "%d", label);
 	strcpy(aux->name, convert);
@@ -154,7 +154,7 @@ int popStack(stack *stk, int nvl_lex)
 	int nvl = nvl_lex;
 
 	while (stk->size) {
-		if (temporary[stk->size-1].category == FUNCAO || temporary[stk->size-1].category == PROCEDIMENTO) {
+		if (temporary[stk->size-1].category == FUNCTION_TP || temporary[stk->size-1].category == PROCEDURE_TP) {
 			if (temporary[stk->size-1].nvl_lex > nvl)
 				aux = pop(stk);
 			else
@@ -162,7 +162,7 @@ int popStack(stack *stk, int nvl_lex)
 		} else {
 			if (temporary[stk->size-1].nvl_lex == nvl) {
 				aux =pop(stk);
-				if (aux->category == VS && aux->item.simple.parameter == SIMPLES)
+				if (aux->category == VS && aux->item.simple.parameter == SIMPLE_TP)
 					count++;
 			} else
 				break;
@@ -178,7 +178,7 @@ node* newProcedure(char* token, int nvl_lex)
 	node *aux = (node*)malloc(sizeof(node));
 
 	aux->nvl_lex = nvl_lex;
-	aux->category = PROCEDIMENTO;
+	aux->category = PROCEDURE_TP;
 
 	strcpy(aux->name, token);
 
@@ -192,7 +192,7 @@ node* newFunction(int type, char* token, int nvl_lex)
 	node *aux = (node*)malloc(sizeof(node));
 
 	aux->nvl_lex = nvl_lex;
-	aux->category = FUNCAO;
+	aux->category = FUNCTION_TP;
 
 	strcpy(aux->name, token);
 

@@ -1,0 +1,2821 @@
+State 25 conflicts: 1 reduce/reduce
+State 58 conflicts: 2 shift/reduce
+State 71 conflicts: 1 reduce/reduce
+State 83 conflicts: 2 shift/reduce
+State 84 conflicts: 2 shift/reduce
+State 107 conflicts: 2 shift/reduce
+State 117 conflicts: 2 shift/reduce
+State 118 conflicts: 2 shift/reduce
+State 119 conflicts: 2 shift/reduce
+State 120 conflicts: 2 shift/reduce
+State 121 conflicts: 2 shift/reduce
+State 122 conflicts: 2 shift/reduce
+State 133 conflicts: 2 shift/reduce
+State 134 conflicts: 2 shift/reduce
+State 135 conflicts: 2 shift/reduce
+State 194 conflicts: 2 shift/reduce
+State 199 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 $@1: %empty
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    3 $@2: %empty
+
+    4 $@3: %empty
+
+    5 block: label_declaration var_declaration $@2 routine_declaration $@3 comp_cmd
+
+    6 label_declaration: %empty
+
+    7 $@4: %empty
+
+    8 label_declaration: LABEL NUMERO $@4 label_declaration_lp PONTO_E_VIRGULA
+
+    9 label_declaration_lp: %empty
+
+   10 $@5: %empty
+
+   11 label_declaration_lp: VIRGULA NUMERO $@5 label_declaration_lp
+
+   12 $@6: %empty
+
+   13 var_declaration: $@6 VAR vars
+   14                | %empty
+
+   15 vars: var vars
+   16     | var
+
+   17 $@7: %empty
+
+   18 var: ident_lists DOIS_PONTOS $@7 type PONTO_E_VIRGULA
+
+   19 type: INTEGER
+   20     | BOOLEAN
+   21     | IDENT
+
+   22 $@8: %empty
+
+   23 ident_lists: identificator $@8 ident_lists_lp
+
+   24 ident_lists_lp: %empty
+
+   25 $@9: %empty
+
+   26 ident_lists_lp: VIRGULA identificator $@9 ident_lists_lp
+
+   27 comp_cmd: T_BEGIN cmd comp_cmd_loop T_END
+
+   28 comp_cmd_loop: %empty
+   29              | PONTO_E_VIRGULA cmd comp_cmd_loop
+
+   30 $@10: %empty
+
+   31 cmd: NUMERO $@10 DOIS_PONTOS unlabeled_cmd
+   32    | unlabeled_cmd
+
+   33 unlabeled_cmd: %empty
+   34              | procedure_call
+   35              | function_call
+   36              | comp_cmd
+   37              | cond_cmd
+   38              | loop_cmd
+   39              | write
+   40              | read
+   41              | assignment
+   42              | goto
+
+   43 $@11: %empty
+
+   44 $@12: %empty
+
+   45 cond_cmd: IF expression $@11 THEN unlabeled_cmd $@12 cond_cmd_else
+
+   46 cond_cmd_else: %empty
+   47              | ELSE unlabeled_cmd
+
+   48 $@13: %empty
+
+   49 $@14: %empty
+
+   50 loop_cmd: WHILE $@13 expression $@14 DO unlabeled_cmd
+
+   51 $@15: %empty
+
+   52 write: WRITE $@15 ABRE_PARENTESES expressions FECHA_PARENTESES
+
+   53 read: READ ABRE_PARENTESES read_section FECHA_PARENTESES
+
+   54 $@16: %empty
+
+   55 $@17: %empty
+
+   56 read_section: $@16 identificator $@17 read_section_lp
+
+   57 read_section_lp: %empty
+   58                | VIRGULA read_section
+
+   59 $@18: %empty
+
+   60 expressions: expression $@18 expressions_loop
+
+   61 expressions_loop: %empty
+
+   62 $@19: %empty
+
+   63 expressions_loop: VIRGULA expression $@19 expressions_loop
+
+   64 expression: normal_expression
+   65           | normal_expression IGUAL normal_expression
+   66           | normal_expression DIFERENTE normal_expression
+   67           | normal_expression MENOR normal_expression
+   68           | normal_expression MAIOR normal_expression
+   69           | normal_expression MAIOR_IGUAL normal_expression
+   70           | normal_expression MENOR_IGUAL normal_expression
+
+   71 normal_expression: term normal_expression_lp
+   72                  | MAIS term normal_expression_lp
+
+   73 $@20: %empty
+
+   74 normal_expression: MENOS term $@20 normal_expression_lp
+
+   75 normal_expression_lp: %empty
+
+   76 $@21: %empty
+
+   77 normal_expression_lp: MAIS term $@21 normal_expression_lp
+
+   78 $@22: %empty
+
+   79 normal_expression_lp: MENOS term $@22 normal_expression_lp
+
+   80 $@23: %empty
+
+   81 normal_expression_lp: OR term $@23 normal_expression_lp
+
+   82 term: element term_lp
+
+   83 term_lp: %empty
+
+   84 $@24: %empty
+
+   85 term_lp: VEZES element $@24 term_lp
+
+   86 $@25: %empty
+
+   87 term_lp: DIV element $@25 term_lp
+   88        | AND element
+
+   89 element: identificator
+   90        | NUMERO
+   91        | TRUE
+   92        | FALSE
+   93        | function_call
+   94        | ABRE_PARENTESES expression FECHA_PARENTESES
+   95        | NOT element
+   96        | %empty
+
+   97 $@26: %empty
+
+   98 assignment: identificator $@26 ATRIBUICAO expression
+
+   99 routine_declaration: %empty
+
+  100 $@27: %empty
+
+  101 routine_declaration: $@27 routine_declaration_lp
+
+  102 routine_declaration_lp: procedure_declaration PONTO_E_VIRGULA routine_declaration_lp
+  103                       | function_declaration PONTO_E_VIRGULA routine_declaration_lp
+  104                       | %empty
+
+  105 $@28: %empty
+
+  106 $@29: %empty
+
+  107 procedure_declaration: PROCEDURE identificator $@28 parameters PONTO_E_VIRGULA $@29 forward
+
+  108 forward: FORWARD
+
+  109 $@30: %empty
+
+  110 forward: $@30 block
+
+  111 $@31: %empty
+
+  112 $@32: %empty
+
+  113 procedure_call: identificator $@31 ABRE_PARENTESES expressions $@32 FECHA_PARENTESES
+  114               | identificator
+
+  115 $@33: %empty
+
+  116 $@34: %empty
+
+  117 $@35: %empty
+
+  118 $@36: %empty
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+  120 $@37: %empty
+
+  121 $@38: %empty
+
+  122 function_call: identificator $@37 ABRE_PARENTESES expressions $@38 FECHA_PARENTESES
+
+  123 parameters: %empty
+  124           | ABRE_PARENTESES parameters_section parameters_lp FECHA_PARENTESES
+
+  125 parameters_lp: %empty
+  126              | PONTO_E_VIRGULA parameters_section parameters_lp
+
+  127 $@39: %empty
+
+  128 parameters_section: ident_lists $@39 DOIS_PONTOS type
+
+  129 $@40: %empty
+
+  130 parameters_section: VAR ident_lists $@40 DOIS_PONTOS type
+
+  131 goto: GOTO NUMERO
+
+  132 identificator: IDENT
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+PROGRAM (258) 2
+ABRE_PARENTESES (259) 2 52 53 94 113 122 124
+FECHA_PARENTESES (260) 2 52 53 94 113 122 124
+VIRGULA (261) 11 26 58 63
+PONTO_E_VIRGULA (262) 2 8 18 29 102 103 107 119 126
+DOIS_PONTOS (263) 18 31 119 128 130
+PONTO (264) 2
+T_BEGIN (265) 27
+T_END (266) 27
+VAR (267) 13 130
+IDENT (268) 2 21 132
+ATRIBUICAO (269) 98
+OR (270) 81
+AND (271) 88
+NOT (272) 95
+MAIOR (273) 68
+MENOR (274) 67
+MAIOR_IGUAL (275) 69
+MENOR_IGUAL (276) 70
+IGUAL (277) 65
+WRITE (278) 52
+READ (279) 53
+VEZES (280) 85
+NUMERO (281) 8 11 31 90 131
+MAIS (282) 72 77
+MENOS (283) 74 79
+WHILE (284) 50
+IF (285) 45
+THEN (286) 45
+ELSE (287) 47
+DO (288) 50
+DIV (289) 87
+PROCEDURE (290) 107
+FUNCTION (291) 119
+LABEL (292) 8
+DIFERENTE (293) 66
+GOTO (294) 131
+INTEGER (295) 19
+BOOLEAN (296) 20
+TRUE (297) 91
+FALSE (298) 92
+FORWARD (299) 108
+
+
+Nonterminals, with rules where they appear
+
+$accept (45)
+    on left: 0
+program (46)
+    on left: 2, on right: 0
+$@1 (47)
+    on left: 1, on right: 2
+block (48)
+    on left: 5, on right: 2 110 119
+$@2 (49)
+    on left: 3, on right: 5
+$@3 (50)
+    on left: 4, on right: 5
+label_declaration (51)
+    on left: 6 8, on right: 5
+$@4 (52)
+    on left: 7, on right: 8
+label_declaration_lp (53)
+    on left: 9 11, on right: 8 11
+$@5 (54)
+    on left: 10, on right: 11
+var_declaration (55)
+    on left: 13 14, on right: 5
+$@6 (56)
+    on left: 12, on right: 13
+vars (57)
+    on left: 15 16, on right: 13 15
+var (58)
+    on left: 18, on right: 15 16
+$@7 (59)
+    on left: 17, on right: 18
+type (60)
+    on left: 19 20 21, on right: 18 119 128 130
+ident_lists (61)
+    on left: 23, on right: 2 18 128 130
+$@8 (62)
+    on left: 22, on right: 23
+ident_lists_lp (63)
+    on left: 24 26, on right: 23 26
+$@9 (64)
+    on left: 25, on right: 26
+comp_cmd (65)
+    on left: 27, on right: 5 36
+comp_cmd_loop (66)
+    on left: 28 29, on right: 27 29
+cmd (67)
+    on left: 31 32, on right: 27 29
+$@10 (68)
+    on left: 30, on right: 31
+unlabeled_cmd (69)
+    on left: 33 34 35 36 37 38 39 40 41 42, on right: 31 32 45 47 50
+cond_cmd (70)
+    on left: 45, on right: 37
+$@11 (71)
+    on left: 43, on right: 45
+$@12 (72)
+    on left: 44, on right: 45
+cond_cmd_else (73)
+    on left: 46 47, on right: 45
+loop_cmd (74)
+    on left: 50, on right: 38
+$@13 (75)
+    on left: 48, on right: 50
+$@14 (76)
+    on left: 49, on right: 50
+write (77)
+    on left: 52, on right: 39
+$@15 (78)
+    on left: 51, on right: 52
+read (79)
+    on left: 53, on right: 40
+read_section (80)
+    on left: 56, on right: 53 58
+$@16 (81)
+    on left: 54, on right: 56
+$@17 (82)
+    on left: 55, on right: 56
+read_section_lp (83)
+    on left: 57 58, on right: 56
+expressions (84)
+    on left: 60, on right: 52 113 122
+$@18 (85)
+    on left: 59, on right: 60
+expressions_loop (86)
+    on left: 61 63, on right: 60 63
+$@19 (87)
+    on left: 62, on right: 63
+expression (88)
+    on left: 64 65 66 67 68 69 70, on right: 45 50 60 63 94 98
+normal_expression (89)
+    on left: 71 72 74, on right: 64 65 66 67 68 69 70
+$@20 (90)
+    on left: 73, on right: 74
+normal_expression_lp (91)
+    on left: 75 77 79 81, on right: 71 72 74 77 79 81
+$@21 (92)
+    on left: 76, on right: 77
+$@22 (93)
+    on left: 78, on right: 79
+$@23 (94)
+    on left: 80, on right: 81
+term (95)
+    on left: 82, on right: 71 72 74 77 79 81
+term_lp (96)
+    on left: 83 85 87 88, on right: 82 85 87
+$@24 (97)
+    on left: 84, on right: 85
+$@25 (98)
+    on left: 86, on right: 87
+element (99)
+    on left: 89 90 91 92 93 94 95 96, on right: 82 85 87 88 95
+assignment (100)
+    on left: 98, on right: 41
+$@26 (101)
+    on left: 97, on right: 98
+routine_declaration (102)
+    on left: 99 101, on right: 5
+$@27 (103)
+    on left: 100, on right: 101
+routine_declaration_lp (104)
+    on left: 102 103 104, on right: 101 102 103
+procedure_declaration (105)
+    on left: 107, on right: 102
+$@28 (106)
+    on left: 105, on right: 107
+$@29 (107)
+    on left: 106, on right: 107
+forward (108)
+    on left: 108 110, on right: 107
+$@30 (109)
+    on left: 109, on right: 110
+procedure_call (110)
+    on left: 113 114, on right: 34
+$@31 (111)
+    on left: 111, on right: 113
+$@32 (112)
+    on left: 112, on right: 113
+function_declaration (113)
+    on left: 119, on right: 103
+$@33 (114)
+    on left: 115, on right: 119
+$@34 (115)
+    on left: 116, on right: 119
+$@35 (116)
+    on left: 117, on right: 119
+$@36 (117)
+    on left: 118, on right: 119
+function_call (118)
+    on left: 122, on right: 35 93
+$@37 (119)
+    on left: 120, on right: 122
+$@38 (120)
+    on left: 121, on right: 122
+parameters (121)
+    on left: 123 124, on right: 107 119
+parameters_lp (122)
+    on left: 125 126, on right: 124 126
+parameters_section (123)
+    on left: 128 130, on right: 124 126
+$@39 (124)
+    on left: 127, on right: 128
+$@40 (125)
+    on left: 129, on right: 130
+goto (126)
+    on left: 131, on right: 42
+identificator (127)
+    on left: 132, on right: 23 26 56 89 98 107 113 114 119 122
+
+
+State 0
+
+    0 $accept: . program $end
+
+    $default  reduce using rule 1 ($@1)
+
+    program  go to state 1
+    $@1      go to state 2
+
+
+State 1
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    2 program: $@1 . PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    PROGRAM  shift, and go to state 4
+
+
+State 3
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 4
+
+    2 program: $@1 PROGRAM . IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    IDENT  shift, and go to state 5
+
+
+State 5
+
+    2 program: $@1 PROGRAM IDENT . ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    ABRE_PARENTESES  shift, and go to state 6
+
+
+State 6
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES . ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    IDENT  shift, and go to state 7
+
+    ident_lists    go to state 8
+    identificator  go to state 9
+
+
+State 7
+
+  132 identificator: IDENT .
+
+    $default  reduce using rule 132 (identificator)
+
+
+State 8
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists . FECHA_PARENTESES PONTO_E_VIRGULA block PONTO
+
+    FECHA_PARENTESES  shift, and go to state 10
+
+
+State 9
+
+   23 ident_lists: identificator . $@8 ident_lists_lp
+
+    $default  reduce using rule 22 ($@8)
+
+    $@8  go to state 11
+
+
+State 10
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES . PONTO_E_VIRGULA block PONTO
+
+    PONTO_E_VIRGULA  shift, and go to state 12
+
+
+State 11
+
+   23 ident_lists: identificator $@8 . ident_lists_lp
+
+    VIRGULA  shift, and go to state 13
+
+    $default  reduce using rule 24 (ident_lists_lp)
+
+    ident_lists_lp  go to state 14
+
+
+State 12
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA . block PONTO
+
+    LABEL  shift, and go to state 15
+
+    $default  reduce using rule 6 (label_declaration)
+
+    block              go to state 16
+    label_declaration  go to state 17
+
+
+State 13
+
+   26 ident_lists_lp: VIRGULA . identificator $@9 ident_lists_lp
+
+    IDENT  shift, and go to state 7
+
+    identificator  go to state 18
+
+
+State 14
+
+   23 ident_lists: identificator $@8 ident_lists_lp .
+
+    $default  reduce using rule 23 (ident_lists)
+
+
+State 15
+
+    8 label_declaration: LABEL . NUMERO $@4 label_declaration_lp PONTO_E_VIRGULA
+
+    NUMERO  shift, and go to state 19
+
+
+State 16
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block . PONTO
+
+    PONTO  shift, and go to state 20
+
+
+State 17
+
+    5 block: label_declaration . var_declaration $@2 routine_declaration $@3 comp_cmd
+
+    VAR       reduce using rule 12 ($@6)
+    $default  reduce using rule 14 (var_declaration)
+
+    var_declaration  go to state 21
+    $@6              go to state 22
+
+
+State 18
+
+   26 ident_lists_lp: VIRGULA identificator . $@9 ident_lists_lp
+
+    $default  reduce using rule 25 ($@9)
+
+    $@9  go to state 23
+
+
+State 19
+
+    8 label_declaration: LABEL NUMERO . $@4 label_declaration_lp PONTO_E_VIRGULA
+
+    $default  reduce using rule 7 ($@4)
+
+    $@4  go to state 24
+
+
+State 20
+
+    2 program: $@1 PROGRAM IDENT ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA block PONTO .
+
+    $default  reduce using rule 2 (program)
+
+
+State 21
+
+    5 block: label_declaration var_declaration . $@2 routine_declaration $@3 comp_cmd
+
+    $default  reduce using rule 3 ($@2)
+
+    $@2  go to state 25
+
+
+State 22
+
+   13 var_declaration: $@6 . VAR vars
+
+    VAR  shift, and go to state 26
+
+
+State 23
+
+   26 ident_lists_lp: VIRGULA identificator $@9 . ident_lists_lp
+
+    VIRGULA  shift, and go to state 13
+
+    $default  reduce using rule 24 (ident_lists_lp)
+
+    ident_lists_lp  go to state 27
+
+
+State 24
+
+    8 label_declaration: LABEL NUMERO $@4 . label_declaration_lp PONTO_E_VIRGULA
+
+    VIRGULA  shift, and go to state 28
+
+    $default  reduce using rule 9 (label_declaration_lp)
+
+    label_declaration_lp  go to state 29
+
+
+State 25
+
+    5 block: label_declaration var_declaration $@2 . routine_declaration $@3 comp_cmd
+
+    T_BEGIN   reduce using rule 99 (routine_declaration)
+    T_BEGIN   [reduce using rule 100 ($@27)]
+    $default  reduce using rule 100 ($@27)
+
+    routine_declaration  go to state 30
+    $@27                 go to state 31
+
+
+State 26
+
+   13 var_declaration: $@6 VAR . vars
+
+    IDENT  shift, and go to state 7
+
+    vars           go to state 32
+    var            go to state 33
+    ident_lists    go to state 34
+    identificator  go to state 9
+
+
+State 27
+
+   26 ident_lists_lp: VIRGULA identificator $@9 ident_lists_lp .
+
+    $default  reduce using rule 26 (ident_lists_lp)
+
+
+State 28
+
+   11 label_declaration_lp: VIRGULA . NUMERO $@5 label_declaration_lp
+
+    NUMERO  shift, and go to state 35
+
+
+State 29
+
+    8 label_declaration: LABEL NUMERO $@4 label_declaration_lp . PONTO_E_VIRGULA
+
+    PONTO_E_VIRGULA  shift, and go to state 36
+
+
+State 30
+
+    5 block: label_declaration var_declaration $@2 routine_declaration . $@3 comp_cmd
+
+    $default  reduce using rule 4 ($@3)
+
+    $@3  go to state 37
+
+
+State 31
+
+  101 routine_declaration: $@27 . routine_declaration_lp
+
+    PROCEDURE  shift, and go to state 38
+    FUNCTION   shift, and go to state 39
+
+    $default  reduce using rule 104 (routine_declaration_lp)
+
+    routine_declaration_lp  go to state 40
+    procedure_declaration   go to state 41
+    function_declaration    go to state 42
+
+
+State 32
+
+   13 var_declaration: $@6 VAR vars .
+
+    $default  reduce using rule 13 (var_declaration)
+
+
+State 33
+
+   15 vars: var . vars
+   16     | var .
+
+    IDENT  shift, and go to state 7
+
+    $default  reduce using rule 16 (vars)
+
+    vars           go to state 43
+    var            go to state 33
+    ident_lists    go to state 34
+    identificator  go to state 9
+
+
+State 34
+
+   18 var: ident_lists . DOIS_PONTOS $@7 type PONTO_E_VIRGULA
+
+    DOIS_PONTOS  shift, and go to state 44
+
+
+State 35
+
+   11 label_declaration_lp: VIRGULA NUMERO . $@5 label_declaration_lp
+
+    $default  reduce using rule 10 ($@5)
+
+    $@5  go to state 45
+
+
+State 36
+
+    8 label_declaration: LABEL NUMERO $@4 label_declaration_lp PONTO_E_VIRGULA .
+
+    $default  reduce using rule 8 (label_declaration)
+
+
+State 37
+
+    5 block: label_declaration var_declaration $@2 routine_declaration $@3 . comp_cmd
+
+    T_BEGIN  shift, and go to state 46
+
+    comp_cmd  go to state 47
+
+
+State 38
+
+  107 procedure_declaration: PROCEDURE . identificator $@28 parameters PONTO_E_VIRGULA $@29 forward
+
+    IDENT  shift, and go to state 7
+
+    identificator  go to state 48
+
+
+State 39
+
+  119 function_declaration: FUNCTION . $@33 identificator $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    $default  reduce using rule 115 ($@33)
+
+    $@33  go to state 49
+
+
+State 40
+
+  101 routine_declaration: $@27 routine_declaration_lp .
+
+    $default  reduce using rule 101 (routine_declaration)
+
+
+State 41
+
+  102 routine_declaration_lp: procedure_declaration . PONTO_E_VIRGULA routine_declaration_lp
+
+    PONTO_E_VIRGULA  shift, and go to state 50
+
+
+State 42
+
+  103 routine_declaration_lp: function_declaration . PONTO_E_VIRGULA routine_declaration_lp
+
+    PONTO_E_VIRGULA  shift, and go to state 51
+
+
+State 43
+
+   15 vars: var vars .
+
+    $default  reduce using rule 15 (vars)
+
+
+State 44
+
+   18 var: ident_lists DOIS_PONTOS . $@7 type PONTO_E_VIRGULA
+
+    $default  reduce using rule 17 ($@7)
+
+    $@7  go to state 52
+
+
+State 45
+
+   11 label_declaration_lp: VIRGULA NUMERO $@5 . label_declaration_lp
+
+    VIRGULA  shift, and go to state 28
+
+    $default  reduce using rule 9 (label_declaration_lp)
+
+    label_declaration_lp  go to state 53
+
+
+State 46
+
+   27 comp_cmd: T_BEGIN . cmd comp_cmd_loop T_END
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    NUMERO   shift, and go to state 56
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    cmd             go to state 61
+    unlabeled_cmd   go to state 62
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 47
+
+    5 block: label_declaration var_declaration $@2 routine_declaration $@3 comp_cmd .
+
+    $default  reduce using rule 5 (block)
+
+
+State 48
+
+  107 procedure_declaration: PROCEDURE identificator . $@28 parameters PONTO_E_VIRGULA $@29 forward
+
+    $default  reduce using rule 105 ($@28)
+
+    $@28  go to state 72
+
+
+State 49
+
+  119 function_declaration: FUNCTION $@33 . identificator $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    IDENT  shift, and go to state 7
+
+    identificator  go to state 73
+
+
+State 50
+
+  102 routine_declaration_lp: procedure_declaration PONTO_E_VIRGULA . routine_declaration_lp
+
+    PROCEDURE  shift, and go to state 38
+    FUNCTION   shift, and go to state 39
+
+    $default  reduce using rule 104 (routine_declaration_lp)
+
+    routine_declaration_lp  go to state 74
+    procedure_declaration   go to state 41
+    function_declaration    go to state 42
+
+
+State 51
+
+  103 routine_declaration_lp: function_declaration PONTO_E_VIRGULA . routine_declaration_lp
+
+    PROCEDURE  shift, and go to state 38
+    FUNCTION   shift, and go to state 39
+
+    $default  reduce using rule 104 (routine_declaration_lp)
+
+    routine_declaration_lp  go to state 75
+    procedure_declaration   go to state 41
+    function_declaration    go to state 42
+
+
+State 52
+
+   18 var: ident_lists DOIS_PONTOS $@7 . type PONTO_E_VIRGULA
+
+    IDENT    shift, and go to state 76
+    INTEGER  shift, and go to state 77
+    BOOLEAN  shift, and go to state 78
+
+    type  go to state 79
+
+
+State 53
+
+   11 label_declaration_lp: VIRGULA NUMERO $@5 label_declaration_lp .
+
+    $default  reduce using rule 11 (label_declaration_lp)
+
+
+State 54
+
+   52 write: WRITE . $@15 ABRE_PARENTESES expressions FECHA_PARENTESES
+
+    $default  reduce using rule 51 ($@15)
+
+    $@15  go to state 80
+
+
+State 55
+
+   53 read: READ . ABRE_PARENTESES read_section FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 81
+
+
+State 56
+
+   31 cmd: NUMERO . $@10 DOIS_PONTOS unlabeled_cmd
+
+    $default  reduce using rule 30 ($@10)
+
+    $@10  go to state 82
+
+
+State 57
+
+   50 loop_cmd: WHILE . $@13 expression $@14 DO unlabeled_cmd
+
+    $default  reduce using rule 48 ($@13)
+
+    $@13  go to state 83
+
+
+State 58
+
+   45 cond_cmd: IF . expression $@11 THEN unlabeled_cmd $@12 cond_cmd_else
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expression         go to state 91
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 59
+
+  131 goto: GOTO . NUMERO
+
+    NUMERO  shift, and go to state 97
+
+
+State 60
+
+   36 unlabeled_cmd: comp_cmd .
+
+    $default  reduce using rule 36 (unlabeled_cmd)
+
+
+State 61
+
+   27 comp_cmd: T_BEGIN cmd . comp_cmd_loop T_END
+
+    PONTO_E_VIRGULA  shift, and go to state 98
+
+    $default  reduce using rule 28 (comp_cmd_loop)
+
+    comp_cmd_loop  go to state 99
+
+
+State 62
+
+   32 cmd: unlabeled_cmd .
+
+    $default  reduce using rule 32 (cmd)
+
+
+State 63
+
+   37 unlabeled_cmd: cond_cmd .
+
+    $default  reduce using rule 37 (unlabeled_cmd)
+
+
+State 64
+
+   38 unlabeled_cmd: loop_cmd .
+
+    $default  reduce using rule 38 (unlabeled_cmd)
+
+
+State 65
+
+   39 unlabeled_cmd: write .
+
+    $default  reduce using rule 39 (unlabeled_cmd)
+
+
+State 66
+
+   40 unlabeled_cmd: read .
+
+    $default  reduce using rule 40 (unlabeled_cmd)
+
+
+State 67
+
+   41 unlabeled_cmd: assignment .
+
+    $default  reduce using rule 41 (unlabeled_cmd)
+
+
+State 68
+
+   34 unlabeled_cmd: procedure_call .
+
+    $default  reduce using rule 34 (unlabeled_cmd)
+
+
+State 69
+
+   35 unlabeled_cmd: function_call .
+
+    $default  reduce using rule 35 (unlabeled_cmd)
+
+
+State 70
+
+   42 unlabeled_cmd: goto .
+
+    $default  reduce using rule 42 (unlabeled_cmd)
+
+
+State 71
+
+   98 assignment: identificator . $@26 ATRIBUICAO expression
+  113 procedure_call: identificator . $@31 ABRE_PARENTESES expressions $@32 FECHA_PARENTESES
+  114               | identificator .
+  122 function_call: identificator . $@37 ABRE_PARENTESES expressions $@38 FECHA_PARENTESES
+
+    ABRE_PARENTESES  reduce using rule 111 ($@31)
+    ABRE_PARENTESES  [reduce using rule 120 ($@37)]
+    ATRIBUICAO       reduce using rule 97 ($@26)
+    $default         reduce using rule 114 (procedure_call)
+
+    $@26  go to state 100
+    $@31  go to state 101
+    $@37  go to state 102
+
+
+State 72
+
+  107 procedure_declaration: PROCEDURE identificator $@28 . parameters PONTO_E_VIRGULA $@29 forward
+
+    ABRE_PARENTESES  shift, and go to state 103
+
+    $default  reduce using rule 123 (parameters)
+
+    parameters  go to state 104
+
+
+State 73
+
+  119 function_declaration: FUNCTION $@33 identificator . $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    $default  reduce using rule 116 ($@34)
+
+    $@34  go to state 105
+
+
+State 74
+
+  102 routine_declaration_lp: procedure_declaration PONTO_E_VIRGULA routine_declaration_lp .
+
+    $default  reduce using rule 102 (routine_declaration_lp)
+
+
+State 75
+
+  103 routine_declaration_lp: function_declaration PONTO_E_VIRGULA routine_declaration_lp .
+
+    $default  reduce using rule 103 (routine_declaration_lp)
+
+
+State 76
+
+   21 type: IDENT .
+
+    $default  reduce using rule 21 (type)
+
+
+State 77
+
+   19 type: INTEGER .
+
+    $default  reduce using rule 19 (type)
+
+
+State 78
+
+   20 type: BOOLEAN .
+
+    $default  reduce using rule 20 (type)
+
+
+State 79
+
+   18 var: ident_lists DOIS_PONTOS $@7 type . PONTO_E_VIRGULA
+
+    PONTO_E_VIRGULA  shift, and go to state 106
+
+
+State 80
+
+   52 write: WRITE $@15 . ABRE_PARENTESES expressions FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 107
+
+
+State 81
+
+   53 read: READ ABRE_PARENTESES . read_section FECHA_PARENTESES
+
+    $default  reduce using rule 54 ($@16)
+
+    read_section  go to state 108
+    $@16          go to state 109
+
+
+State 82
+
+   31 cmd: NUMERO $@10 . DOIS_PONTOS unlabeled_cmd
+
+    DOIS_PONTOS  shift, and go to state 110
+
+
+State 83
+
+   50 loop_cmd: WHILE $@13 . expression $@14 DO unlabeled_cmd
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expression         go to state 111
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 84
+
+   94 element: ABRE_PARENTESES . expression FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expression         go to state 112
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 85
+
+   95 element: NOT . element
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    element        go to state 113
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 86
+
+   90 element: NUMERO .
+
+    $default  reduce using rule 90 (element)
+
+
+State 87
+
+   72 normal_expression: MAIS . term normal_expression_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    term           go to state 114
+    element        go to state 94
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 88
+
+   74 normal_expression: MENOS . term $@20 normal_expression_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    term           go to state 115
+    element        go to state 94
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 89
+
+   91 element: TRUE .
+
+    $default  reduce using rule 91 (element)
+
+
+State 90
+
+   92 element: FALSE .
+
+    $default  reduce using rule 92 (element)
+
+
+State 91
+
+   45 cond_cmd: IF expression . $@11 THEN unlabeled_cmd $@12 cond_cmd_else
+
+    $default  reduce using rule 43 ($@11)
+
+    $@11  go to state 116
+
+
+State 92
+
+   64 expression: normal_expression .
+   65           | normal_expression . IGUAL normal_expression
+   66           | normal_expression . DIFERENTE normal_expression
+   67           | normal_expression . MENOR normal_expression
+   68           | normal_expression . MAIOR normal_expression
+   69           | normal_expression . MAIOR_IGUAL normal_expression
+   70           | normal_expression . MENOR_IGUAL normal_expression
+
+    MAIOR        shift, and go to state 117
+    MENOR        shift, and go to state 118
+    MAIOR_IGUAL  shift, and go to state 119
+    MENOR_IGUAL  shift, and go to state 120
+    IGUAL        shift, and go to state 121
+    DIFERENTE    shift, and go to state 122
+
+    $default  reduce using rule 64 (expression)
+
+
+State 93
+
+   71 normal_expression: term . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 126
+
+
+State 94
+
+   82 term: element . term_lp
+
+    AND    shift, and go to state 127
+    VEZES  shift, and go to state 128
+    DIV    shift, and go to state 129
+
+    $default  reduce using rule 83 (term_lp)
+
+    term_lp  go to state 130
+
+
+State 95
+
+   93 element: function_call .
+
+    $default  reduce using rule 93 (element)
+
+
+State 96
+
+   89 element: identificator .
+  122 function_call: identificator . $@37 ABRE_PARENTESES expressions $@38 FECHA_PARENTESES
+
+    ABRE_PARENTESES  reduce using rule 120 ($@37)
+    $default         reduce using rule 89 (element)
+
+    $@37  go to state 102
+
+
+State 97
+
+  131 goto: GOTO NUMERO .
+
+    $default  reduce using rule 131 (goto)
+
+
+State 98
+
+   29 comp_cmd_loop: PONTO_E_VIRGULA . cmd comp_cmd_loop
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    NUMERO   shift, and go to state 56
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    cmd             go to state 131
+    unlabeled_cmd   go to state 62
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 99
+
+   27 comp_cmd: T_BEGIN cmd comp_cmd_loop . T_END
+
+    T_END  shift, and go to state 132
+
+
+State 100
+
+   98 assignment: identificator $@26 . ATRIBUICAO expression
+
+    ATRIBUICAO  shift, and go to state 133
+
+
+State 101
+
+  113 procedure_call: identificator $@31 . ABRE_PARENTESES expressions $@32 FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 134
+
+
+State 102
+
+  122 function_call: identificator $@37 . ABRE_PARENTESES expressions $@38 FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 135
+
+
+State 103
+
+  124 parameters: ABRE_PARENTESES . parameters_section parameters_lp FECHA_PARENTESES
+
+    VAR    shift, and go to state 136
+    IDENT  shift, and go to state 7
+
+    ident_lists         go to state 137
+    parameters_section  go to state 138
+    identificator       go to state 9
+
+
+State 104
+
+  107 procedure_declaration: PROCEDURE identificator $@28 parameters . PONTO_E_VIRGULA $@29 forward
+
+    PONTO_E_VIRGULA  shift, and go to state 139
+
+
+State 105
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 . parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    ABRE_PARENTESES  shift, and go to state 103
+
+    $default  reduce using rule 123 (parameters)
+
+    parameters  go to state 140
+
+
+State 106
+
+   18 var: ident_lists DOIS_PONTOS $@7 type PONTO_E_VIRGULA .
+
+    $default  reduce using rule 18 (var)
+
+
+State 107
+
+   52 write: WRITE $@15 ABRE_PARENTESES . expressions FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expressions        go to state 141
+    expression         go to state 142
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 108
+
+   53 read: READ ABRE_PARENTESES read_section . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 143
+
+
+State 109
+
+   56 read_section: $@16 . identificator $@17 read_section_lp
+
+    IDENT  shift, and go to state 7
+
+    identificator  go to state 144
+
+
+State 110
+
+   31 cmd: NUMERO $@10 DOIS_PONTOS . unlabeled_cmd
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    unlabeled_cmd   go to state 145
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 111
+
+   50 loop_cmd: WHILE $@13 expression . $@14 DO unlabeled_cmd
+
+    $default  reduce using rule 49 ($@14)
+
+    $@14  go to state 146
+
+
+State 112
+
+   94 element: ABRE_PARENTESES expression . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 147
+
+
+State 113
+
+   95 element: NOT element .
+
+    $default  reduce using rule 95 (element)
+
+
+State 114
+
+   72 normal_expression: MAIS term . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 148
+
+
+State 115
+
+   74 normal_expression: MENOS term . $@20 normal_expression_lp
+
+    $default  reduce using rule 73 ($@20)
+
+    $@20  go to state 149
+
+
+State 116
+
+   45 cond_cmd: IF expression $@11 . THEN unlabeled_cmd $@12 cond_cmd_else
+
+    THEN  shift, and go to state 150
+
+
+State 117
+
+   68 expression: normal_expression MAIOR . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 151
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 118
+
+   67 expression: normal_expression MENOR . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 152
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 119
+
+   69 expression: normal_expression MAIOR_IGUAL . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 153
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 120
+
+   70 expression: normal_expression MENOR_IGUAL . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 154
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 121
+
+   65 expression: normal_expression IGUAL . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 155
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 122
+
+   66 expression: normal_expression DIFERENTE . normal_expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    normal_expression  go to state 156
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 123
+
+   81 normal_expression_lp: OR . term $@23 normal_expression_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    term           go to state 157
+    element        go to state 94
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 124
+
+   77 normal_expression_lp: MAIS . term $@21 normal_expression_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    term           go to state 158
+    element        go to state 94
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 125
+
+   79 normal_expression_lp: MENOS . term $@22 normal_expression_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    term           go to state 159
+    element        go to state 94
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 126
+
+   71 normal_expression: term normal_expression_lp .
+
+    $default  reduce using rule 71 (normal_expression)
+
+
+State 127
+
+   88 term_lp: AND . element
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    element        go to state 160
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 128
+
+   85 term_lp: VEZES . element $@24 term_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    element        go to state 161
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 129
+
+   87 term_lp: DIV . element $@25 term_lp
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    $default  reduce using rule 96 (element)
+
+    element        go to state 162
+    function_call  go to state 95
+    identificator  go to state 96
+
+
+State 130
+
+   82 term: element term_lp .
+
+    $default  reduce using rule 82 (term)
+
+
+State 131
+
+   29 comp_cmd_loop: PONTO_E_VIRGULA cmd . comp_cmd_loop
+
+    PONTO_E_VIRGULA  shift, and go to state 98
+
+    $default  reduce using rule 28 (comp_cmd_loop)
+
+    comp_cmd_loop  go to state 163
+
+
+State 132
+
+   27 comp_cmd: T_BEGIN cmd comp_cmd_loop T_END .
+
+    $default  reduce using rule 27 (comp_cmd)
+
+
+State 133
+
+   98 assignment: identificator $@26 ATRIBUICAO . expression
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expression         go to state 164
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 134
+
+  113 procedure_call: identificator $@31 ABRE_PARENTESES . expressions $@32 FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expressions        go to state 165
+    expression         go to state 142
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 135
+
+  122 function_call: identificator $@37 ABRE_PARENTESES . expressions $@38 FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expressions        go to state 166
+    expression         go to state 142
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 136
+
+  130 parameters_section: VAR . ident_lists $@40 DOIS_PONTOS type
+
+    IDENT  shift, and go to state 7
+
+    ident_lists    go to state 167
+    identificator  go to state 9
+
+
+State 137
+
+  128 parameters_section: ident_lists . $@39 DOIS_PONTOS type
+
+    $default  reduce using rule 127 ($@39)
+
+    $@39  go to state 168
+
+
+State 138
+
+  124 parameters: ABRE_PARENTESES parameters_section . parameters_lp FECHA_PARENTESES
+
+    PONTO_E_VIRGULA  shift, and go to state 169
+
+    $default  reduce using rule 125 (parameters_lp)
+
+    parameters_lp  go to state 170
+
+
+State 139
+
+  107 procedure_declaration: PROCEDURE identificator $@28 parameters PONTO_E_VIRGULA . $@29 forward
+
+    $default  reduce using rule 106 ($@29)
+
+    $@29  go to state 171
+
+
+State 140
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters . $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    $default  reduce using rule 117 ($@35)
+
+    $@35  go to state 172
+
+
+State 141
+
+   52 write: WRITE $@15 ABRE_PARENTESES expressions . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 173
+
+
+State 142
+
+   60 expressions: expression . $@18 expressions_loop
+
+    $default  reduce using rule 59 ($@18)
+
+    $@18  go to state 174
+
+
+State 143
+
+   53 read: READ ABRE_PARENTESES read_section FECHA_PARENTESES .
+
+    $default  reduce using rule 53 (read)
+
+
+State 144
+
+   56 read_section: $@16 identificator . $@17 read_section_lp
+
+    $default  reduce using rule 55 ($@17)
+
+    $@17  go to state 175
+
+
+State 145
+
+   31 cmd: NUMERO $@10 DOIS_PONTOS unlabeled_cmd .
+
+    $default  reduce using rule 31 (cmd)
+
+
+State 146
+
+   50 loop_cmd: WHILE $@13 expression $@14 . DO unlabeled_cmd
+
+    DO  shift, and go to state 176
+
+
+State 147
+
+   94 element: ABRE_PARENTESES expression FECHA_PARENTESES .
+
+    $default  reduce using rule 94 (element)
+
+
+State 148
+
+   72 normal_expression: MAIS term normal_expression_lp .
+
+    $default  reduce using rule 72 (normal_expression)
+
+
+State 149
+
+   74 normal_expression: MENOS term $@20 . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 177
+
+
+State 150
+
+   45 cond_cmd: IF expression $@11 THEN . unlabeled_cmd $@12 cond_cmd_else
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    unlabeled_cmd   go to state 178
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 151
+
+   68 expression: normal_expression MAIOR normal_expression .
+
+    $default  reduce using rule 68 (expression)
+
+
+State 152
+
+   67 expression: normal_expression MENOR normal_expression .
+
+    $default  reduce using rule 67 (expression)
+
+
+State 153
+
+   69 expression: normal_expression MAIOR_IGUAL normal_expression .
+
+    $default  reduce using rule 69 (expression)
+
+
+State 154
+
+   70 expression: normal_expression MENOR_IGUAL normal_expression .
+
+    $default  reduce using rule 70 (expression)
+
+
+State 155
+
+   65 expression: normal_expression IGUAL normal_expression .
+
+    $default  reduce using rule 65 (expression)
+
+
+State 156
+
+   66 expression: normal_expression DIFERENTE normal_expression .
+
+    $default  reduce using rule 66 (expression)
+
+
+State 157
+
+   81 normal_expression_lp: OR term . $@23 normal_expression_lp
+
+    $default  reduce using rule 80 ($@23)
+
+    $@23  go to state 179
+
+
+State 158
+
+   77 normal_expression_lp: MAIS term . $@21 normal_expression_lp
+
+    $default  reduce using rule 76 ($@21)
+
+    $@21  go to state 180
+
+
+State 159
+
+   79 normal_expression_lp: MENOS term . $@22 normal_expression_lp
+
+    $default  reduce using rule 78 ($@22)
+
+    $@22  go to state 181
+
+
+State 160
+
+   88 term_lp: AND element .
+
+    $default  reduce using rule 88 (term_lp)
+
+
+State 161
+
+   85 term_lp: VEZES element . $@24 term_lp
+
+    $default  reduce using rule 84 ($@24)
+
+    $@24  go to state 182
+
+
+State 162
+
+   87 term_lp: DIV element . $@25 term_lp
+
+    $default  reduce using rule 86 ($@25)
+
+    $@25  go to state 183
+
+
+State 163
+
+   29 comp_cmd_loop: PONTO_E_VIRGULA cmd comp_cmd_loop .
+
+    $default  reduce using rule 29 (comp_cmd_loop)
+
+
+State 164
+
+   98 assignment: identificator $@26 ATRIBUICAO expression .
+
+    $default  reduce using rule 98 (assignment)
+
+
+State 165
+
+  113 procedure_call: identificator $@31 ABRE_PARENTESES expressions . $@32 FECHA_PARENTESES
+
+    $default  reduce using rule 112 ($@32)
+
+    $@32  go to state 184
+
+
+State 166
+
+  122 function_call: identificator $@37 ABRE_PARENTESES expressions . $@38 FECHA_PARENTESES
+
+    $default  reduce using rule 121 ($@38)
+
+    $@38  go to state 185
+
+
+State 167
+
+  130 parameters_section: VAR ident_lists . $@40 DOIS_PONTOS type
+
+    $default  reduce using rule 129 ($@40)
+
+    $@40  go to state 186
+
+
+State 168
+
+  128 parameters_section: ident_lists $@39 . DOIS_PONTOS type
+
+    DOIS_PONTOS  shift, and go to state 187
+
+
+State 169
+
+  126 parameters_lp: PONTO_E_VIRGULA . parameters_section parameters_lp
+
+    VAR    shift, and go to state 136
+    IDENT  shift, and go to state 7
+
+    ident_lists         go to state 137
+    parameters_section  go to state 188
+    identificator       go to state 9
+
+
+State 170
+
+  124 parameters: ABRE_PARENTESES parameters_section parameters_lp . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 189
+
+
+State 171
+
+  107 procedure_declaration: PROCEDURE identificator $@28 parameters PONTO_E_VIRGULA $@29 . forward
+
+    FORWARD  shift, and go to state 190
+
+    $default  reduce using rule 109 ($@30)
+
+    forward  go to state 191
+    $@30     go to state 192
+
+
+State 172
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 . DOIS_PONTOS type $@36 PONTO_E_VIRGULA block
+
+    DOIS_PONTOS  shift, and go to state 193
+
+
+State 173
+
+   52 write: WRITE $@15 ABRE_PARENTESES expressions FECHA_PARENTESES .
+
+    $default  reduce using rule 52 (write)
+
+
+State 174
+
+   60 expressions: expression $@18 . expressions_loop
+
+    VIRGULA  shift, and go to state 194
+
+    $default  reduce using rule 61 (expressions_loop)
+
+    expressions_loop  go to state 195
+
+
+State 175
+
+   56 read_section: $@16 identificator $@17 . read_section_lp
+
+    VIRGULA  shift, and go to state 196
+
+    $default  reduce using rule 57 (read_section_lp)
+
+    read_section_lp  go to state 197
+
+
+State 176
+
+   50 loop_cmd: WHILE $@13 expression $@14 DO . unlabeled_cmd
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    unlabeled_cmd   go to state 198
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 177
+
+   74 normal_expression: MENOS term $@20 normal_expression_lp .
+
+    $default  reduce using rule 74 (normal_expression)
+
+
+State 178
+
+   45 cond_cmd: IF expression $@11 THEN unlabeled_cmd . $@12 cond_cmd_else
+
+    $default  reduce using rule 44 ($@12)
+
+    $@12  go to state 199
+
+
+State 179
+
+   81 normal_expression_lp: OR term $@23 . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 200
+
+
+State 180
+
+   77 normal_expression_lp: MAIS term $@21 . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 201
+
+
+State 181
+
+   79 normal_expression_lp: MENOS term $@22 . normal_expression_lp
+
+    OR     shift, and go to state 123
+    MAIS   shift, and go to state 124
+    MENOS  shift, and go to state 125
+
+    $default  reduce using rule 75 (normal_expression_lp)
+
+    normal_expression_lp  go to state 202
+
+
+State 182
+
+   85 term_lp: VEZES element $@24 . term_lp
+
+    AND    shift, and go to state 127
+    VEZES  shift, and go to state 128
+    DIV    shift, and go to state 129
+
+    $default  reduce using rule 83 (term_lp)
+
+    term_lp  go to state 203
+
+
+State 183
+
+   87 term_lp: DIV element $@25 . term_lp
+
+    AND    shift, and go to state 127
+    VEZES  shift, and go to state 128
+    DIV    shift, and go to state 129
+
+    $default  reduce using rule 83 (term_lp)
+
+    term_lp  go to state 204
+
+
+State 184
+
+  113 procedure_call: identificator $@31 ABRE_PARENTESES expressions $@32 . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 205
+
+
+State 185
+
+  122 function_call: identificator $@37 ABRE_PARENTESES expressions $@38 . FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 206
+
+
+State 186
+
+  130 parameters_section: VAR ident_lists $@40 . DOIS_PONTOS type
+
+    DOIS_PONTOS  shift, and go to state 207
+
+
+State 187
+
+  128 parameters_section: ident_lists $@39 DOIS_PONTOS . type
+
+    IDENT    shift, and go to state 76
+    INTEGER  shift, and go to state 77
+    BOOLEAN  shift, and go to state 78
+
+    type  go to state 208
+
+
+State 188
+
+  126 parameters_lp: PONTO_E_VIRGULA parameters_section . parameters_lp
+
+    PONTO_E_VIRGULA  shift, and go to state 169
+
+    $default  reduce using rule 125 (parameters_lp)
+
+    parameters_lp  go to state 209
+
+
+State 189
+
+  124 parameters: ABRE_PARENTESES parameters_section parameters_lp FECHA_PARENTESES .
+
+    $default  reduce using rule 124 (parameters)
+
+
+State 190
+
+  108 forward: FORWARD .
+
+    $default  reduce using rule 108 (forward)
+
+
+State 191
+
+  107 procedure_declaration: PROCEDURE identificator $@28 parameters PONTO_E_VIRGULA $@29 forward .
+
+    $default  reduce using rule 107 (procedure_declaration)
+
+
+State 192
+
+  110 forward: $@30 . block
+
+    LABEL  shift, and go to state 15
+
+    $default  reduce using rule 6 (label_declaration)
+
+    block              go to state 210
+    label_declaration  go to state 17
+
+
+State 193
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS . type $@36 PONTO_E_VIRGULA block
+
+    IDENT    shift, and go to state 76
+    INTEGER  shift, and go to state 77
+    BOOLEAN  shift, and go to state 78
+
+    type  go to state 211
+
+
+State 194
+
+   63 expressions_loop: VIRGULA . expression $@19 expressions_loop
+
+    ABRE_PARENTESES  shift, and go to state 84
+    IDENT            shift, and go to state 7
+    NOT              shift, and go to state 85
+    NUMERO           shift, and go to state 86
+    MAIS             shift, and go to state 87
+    MENOS            shift, and go to state 88
+    TRUE             shift, and go to state 89
+    FALSE            shift, and go to state 90
+
+    MAIS      [reduce using rule 96 (element)]
+    MENOS     [reduce using rule 96 (element)]
+    $default  reduce using rule 96 (element)
+
+    expression         go to state 212
+    normal_expression  go to state 92
+    term               go to state 93
+    element            go to state 94
+    function_call      go to state 95
+    identificator      go to state 96
+
+
+State 195
+
+   60 expressions: expression $@18 expressions_loop .
+
+    $default  reduce using rule 60 (expressions)
+
+
+State 196
+
+   58 read_section_lp: VIRGULA . read_section
+
+    $default  reduce using rule 54 ($@16)
+
+    read_section  go to state 213
+    $@16          go to state 109
+
+
+State 197
+
+   56 read_section: $@16 identificator $@17 read_section_lp .
+
+    $default  reduce using rule 56 (read_section)
+
+
+State 198
+
+   50 loop_cmd: WHILE $@13 expression $@14 DO unlabeled_cmd .
+
+    $default  reduce using rule 50 (loop_cmd)
+
+
+State 199
+
+   45 cond_cmd: IF expression $@11 THEN unlabeled_cmd $@12 . cond_cmd_else
+
+    ELSE  shift, and go to state 214
+
+    ELSE      [reduce using rule 46 (cond_cmd_else)]
+    $default  reduce using rule 46 (cond_cmd_else)
+
+    cond_cmd_else  go to state 215
+
+
+State 200
+
+   81 normal_expression_lp: OR term $@23 normal_expression_lp .
+
+    $default  reduce using rule 81 (normal_expression_lp)
+
+
+State 201
+
+   77 normal_expression_lp: MAIS term $@21 normal_expression_lp .
+
+    $default  reduce using rule 77 (normal_expression_lp)
+
+
+State 202
+
+   79 normal_expression_lp: MENOS term $@22 normal_expression_lp .
+
+    $default  reduce using rule 79 (normal_expression_lp)
+
+
+State 203
+
+   85 term_lp: VEZES element $@24 term_lp .
+
+    $default  reduce using rule 85 (term_lp)
+
+
+State 204
+
+   87 term_lp: DIV element $@25 term_lp .
+
+    $default  reduce using rule 87 (term_lp)
+
+
+State 205
+
+  113 procedure_call: identificator $@31 ABRE_PARENTESES expressions $@32 FECHA_PARENTESES .
+
+    $default  reduce using rule 113 (procedure_call)
+
+
+State 206
+
+  122 function_call: identificator $@37 ABRE_PARENTESES expressions $@38 FECHA_PARENTESES .
+
+    $default  reduce using rule 122 (function_call)
+
+
+State 207
+
+  130 parameters_section: VAR ident_lists $@40 DOIS_PONTOS . type
+
+    IDENT    shift, and go to state 76
+    INTEGER  shift, and go to state 77
+    BOOLEAN  shift, and go to state 78
+
+    type  go to state 216
+
+
+State 208
+
+  128 parameters_section: ident_lists $@39 DOIS_PONTOS type .
+
+    $default  reduce using rule 128 (parameters_section)
+
+
+State 209
+
+  126 parameters_lp: PONTO_E_VIRGULA parameters_section parameters_lp .
+
+    $default  reduce using rule 126 (parameters_lp)
+
+
+State 210
+
+  110 forward: $@30 block .
+
+    $default  reduce using rule 110 (forward)
+
+
+State 211
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS type . $@36 PONTO_E_VIRGULA block
+
+    $default  reduce using rule 118 ($@36)
+
+    $@36  go to state 217
+
+
+State 212
+
+   63 expressions_loop: VIRGULA expression . $@19 expressions_loop
+
+    $default  reduce using rule 62 ($@19)
+
+    $@19  go to state 218
+
+
+State 213
+
+   58 read_section_lp: VIRGULA read_section .
+
+    $default  reduce using rule 58 (read_section_lp)
+
+
+State 214
+
+   47 cond_cmd_else: ELSE . unlabeled_cmd
+
+    T_BEGIN  shift, and go to state 46
+    IDENT    shift, and go to state 7
+    WRITE    shift, and go to state 54
+    READ     shift, and go to state 55
+    WHILE    shift, and go to state 57
+    IF       shift, and go to state 58
+    GOTO     shift, and go to state 59
+
+    $default  reduce using rule 33 (unlabeled_cmd)
+
+    comp_cmd        go to state 60
+    unlabeled_cmd   go to state 219
+    cond_cmd        go to state 63
+    loop_cmd        go to state 64
+    write           go to state 65
+    read            go to state 66
+    assignment      go to state 67
+    procedure_call  go to state 68
+    function_call   go to state 69
+    goto            go to state 70
+    identificator   go to state 71
+
+
+State 215
+
+   45 cond_cmd: IF expression $@11 THEN unlabeled_cmd $@12 cond_cmd_else .
+
+    $default  reduce using rule 45 (cond_cmd)
+
+
+State 216
+
+  130 parameters_section: VAR ident_lists $@40 DOIS_PONTOS type .
+
+    $default  reduce using rule 130 (parameters_section)
+
+
+State 217
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS type $@36 . PONTO_E_VIRGULA block
+
+    PONTO_E_VIRGULA  shift, and go to state 220
+
+
+State 218
+
+   63 expressions_loop: VIRGULA expression $@19 . expressions_loop
+
+    VIRGULA  shift, and go to state 194
+
+    $default  reduce using rule 61 (expressions_loop)
+
+    expressions_loop  go to state 221
+
+
+State 219
+
+   47 cond_cmd_else: ELSE unlabeled_cmd .
+
+    $default  reduce using rule 47 (cond_cmd_else)
+
+
+State 220
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA . block
+
+    LABEL  shift, and go to state 15
+
+    $default  reduce using rule 6 (label_declaration)
+
+    block              go to state 222
+    label_declaration  go to state 17
+
+
+State 221
+
+   63 expressions_loop: VIRGULA expression $@19 expressions_loop .
+
+    $default  reduce using rule 63 (expressions_loop)
+
+
+State 222
+
+  119 function_declaration: FUNCTION $@33 identificator $@34 parameters $@35 DOIS_PONTOS type $@36 PONTO_E_VIRGULA block .
+
+    $default  reduce using rule 119 (function_declaration)
