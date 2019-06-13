@@ -19,6 +19,7 @@ int offset = 0;
 int write = 0;
 int call_flag = 0;
 int type_rst = 0;
+int is_bool = 0;
 
 stack *aux;
 stack *labels;
@@ -236,8 +237,15 @@ unlabeled_cmd:
 ;
 
 cond_cmd:
+            {
+                is_bool = 0;
+            }
             IF expression
             {
+                if (!is_bool) {
+                    yyerror("Resultado não booleano.");
+                    exit(1);
+                }
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(str_tmp, nl);
 
@@ -275,6 +283,9 @@ cond_cmd_else:
 ;
 
 loop_cmd:
+            {
+                is_bool = 0;
+            }
             WHILE
             {
                 geraRotulo(str_tmp);
@@ -288,6 +299,10 @@ loop_cmd:
             }
             expression
             {
+                if (!is_bool) {
+                    yyerror("Resultado não booleano.");
+                    exit(1);
+                }
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(str_tmp, nl);
 
@@ -394,6 +409,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
             | normal_expression DIFERENTE normal_expression 
             {
@@ -408,6 +424,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
             | normal_expression MENOR normal_expression 
             {
@@ -422,6 +439,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
             | normal_expression MAIOR normal_expression 
             {
@@ -436,6 +454,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
             | normal_expression MAIOR_IGUAL normal_expression 
             {
@@ -450,6 +469,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
             | normal_expression MENOR_IGUAL normal_expression 
             {
@@ -464,6 +484,7 @@ expression:
                         }
                     }
                 }
+                is_bool++;
             }
 ;
  
@@ -494,6 +515,7 @@ normal_expression_lp:
             {
                 sprintf(str_tmp, "DISJ");
                 geraCodigo(NULL, str_tmp);
+                is_bool++;
             }
             normal_expression_lp
 ;
@@ -517,6 +539,7 @@ term_lp:
             {
                 sprintf(str_tmp, "CONJ");
                 geraCodigo(NULL, str_tmp);
+                is_bool++;
             }
 ;
 
