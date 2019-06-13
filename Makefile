@@ -1,19 +1,21 @@
-$DEPURA=1
+DEPURA=1
+PATHC=src/
+PATHU=utils/
 
-compilador: lex.yy.c y.tab.c compilador.o compilador.h utils.o
+compilador: lex.yy.c y.tab.c compilador.o $(PATHC)compilador.h utils.o
 	gcc lex.yy.c compilador.tab.c utils.o compilador.o -o compilador -ll -ly -lc
 
-lex.yy.c: compilador.l compilador.h
-	flex compilador.l
+lex.yy.c: $(PATHC)compilador.l $(PATHC)compilador.h
+	flex $(PATHC)compilador.l
 
-y.tab.c: compilador.y compilador.h
-	bison compilador.y -d -v
+y.tab.c: $(PATHC)compilador.y $(PATHC)compilador.h
+	bison $(PATHC)compilador.y -d -v
 
-compilador.o : compilador.h compiladorF.c
-	gcc -c compiladorF.c -o compilador.o
+compilador.o : $(PATHC)compilador.h $(PATHC)compiladorF.c
+	gcc -c $(PATHC)compiladorF.c -o compilador.o
 
-utils.o: utils.c utils.h
-	gcc -c utils.c -o utils.o
+utils.o: $(PATHU)utils.c $(PATHU)utils.h
+	gcc -c $(PATHU)utils.c -o utils.o
 
 clean : 
 	@echo "Removendo executaveis...."

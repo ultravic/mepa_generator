@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "utils.h"
-#include "compilador.h"
+#include "../src/compilador.h"
 
 //-----------------------------------------------------
 

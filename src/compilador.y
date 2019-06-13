@@ -8,8 +8,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "compilador.h"
-#include "utils.h"
+#include "src/compilador.h"
+#include "utils/utils.h"
 
 extern int yylex(void);
 extern char *yytext;

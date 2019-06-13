@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
-#include "utils.h"
+#include "../utils/utils.h"
 
 /* -------------------------------------------------------------------
  *  vari�veis globais */

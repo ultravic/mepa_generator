@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "compilador.h"
+#include "src/compilador.h"
 #include "compilador.tab.h"
 
 //#define IMPRIME(STR) {};
