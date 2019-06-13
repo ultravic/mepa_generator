@@ -646,12 +646,14 @@ procedure_declaration:
                     geraRotulo(str_tmp);
                     strcpy(proced->item.func.label, str_tmp);
 
+                    geraRotulo(str_tmp);
+                    strcpy(proced->item.func.label_f, str_tmp);
+
                     sprintf(str_tmp, "ENPR %d", nvl_lex);
                     geraCodigo(proced->item.func.label, str_tmp);
                 } else {
                     proced = temporary;
-                    sprintf(str_tmp, "ENPR %d", nvl_lex);
-                    geraCodigo(proced->item.func.label_f, str_tmp);
+                    geraCodigo(proced->item.func.label_f, "NADA");
                 }
             }
             parameters PONTO_E_VIRGULA
@@ -682,17 +684,10 @@ procedure_declaration:
 forward:
             FORWARD
             {
-                geraRotulo(str_tmp);
-                strcpy(proced->item.func.label_f, str_tmp);
-
-                temporary_lab = newLabel(atoi(str_tmp), nvl_lex);
-
-                strcpy(temporary_lab->item.lab.label, str_tmp);
-                sprintf(str_tmp, "DSVS %s", temporary_lab->item.lab.label);
+                sprintf(str_tmp, "DSVS %s", proced->item.func.label_f);
 
                 geraCodigo(NULL, str_tmp);
-                push(labels, temporary_lab);
-                
+
                 parameters->size = 0;
                 offset = 0;
                 proced = NULL;
@@ -742,17 +737,24 @@ procedure_call:
 ;
 
 function_declaration: 
-            FUNCTION
+            FUNCTION identificator
             {
-            }
-            identificator
-            {
-                funct = newFunction(0, yytext, nvl_lex);
-                geraRotulo(str_tmp);
-                strcpy(funct->item.func.label, str_tmp);
+                temporary = find(symbols_table, yytext);
 
-                sprintf(str_tmp,"ENPR %d", nvl_lex);
-                geraCodigo(funct->item.func.label, str_tmp);
+                if (!temporary) {
+                    funct = newFunction(0, yytext, nvl_lex);
+                    geraRotulo(str_tmp);
+                    strcpy(funct->item.func.label, str_tmp);
+
+                    geraRotulo(str_tmp);
+                    strcpy(funct->item.func.label_f, str_tmp);
+
+                    sprintf(str_tmp,"ENPR %d", nvl_lex);
+                    geraCodigo(funct->item.func.label, str_tmp);
+                } else {
+                    funct = temporary;
+                    geraCodigo(funct->item.func.label_f, "NADA");
+                }
             }
             parameters 
             {
@@ -794,7 +796,20 @@ function_declaration:
                     }
                 }
             } PONTO_E_VIRGULA 
-            block
+            foward_func
+;
+
+foward_func:
+            FORWARD
+            {
+                sprintf(str_tmp, "DSVS %s", funct->item.func.label_f);
+
+                geraCodigo(NULL, str_tmp);
+
+                parameters->size = 0;
+                offset = 0;
+            }
+            | block
 ;
 
 function_call:

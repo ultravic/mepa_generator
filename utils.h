@@ -29,8 +29,8 @@ typedef struct {
 	int num_param;
 	int offset;
 	variable *parameters;
-	char label[MAX];
 	char label_f[MAX];
+	char label[MAX];
 } function;
 
 union types {
