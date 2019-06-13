@@ -50,7 +50,7 @@ void geraRotulo(char *label)
 {
 	char *rot = (char*)malloc(sizeof(char)*MAX);
 	
-	sprintf(rot,"R%02d",contador_rotulo);
+	sprintf(rot, "R%02d", contador_rotulo);
 	contador_rotulo++;
 	
 	strcpy(label, rot);

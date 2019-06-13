@@ -1,5 +1,5 @@
-#ifndef stack__
-#define stack__
+#ifndef __stack__
+#define __stack__
 
 #define STACK_SIZE 1000
 
@@ -11,6 +11,8 @@
 #define REFERENCIA 0
 #define SIMPLES 1
 #define VALOR 2
+
+// Base data types
 
 typedef struct {
 	int type;
@@ -48,6 +50,8 @@ typedef struct {
 	int size;
 	node *head;
 } stack;
+
+// Utilitaries functions
 
 stack* newStack();
 

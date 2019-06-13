@@ -50,21 +50,21 @@ char str_tmp[32];
 
 %%
 
-programa:   
+program:   
             { 
                 geraCodigo(NULL, "INPP"); 
             }
             PROGRAM IDENT 
-            ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-            bloco PONTO 
+            ABRE_PARENTESES ident_lists FECHA_PARENTESES PONTO_E_VIRGULA
+            block PONTO 
             {
                 geraCodigo(NULL, "PARA"); 
             }
 ;
 
-bloco: 
-            parte_declara_rotulos_opt
-            parte_declara_vars
+block: 
+            label_declaration
+            var_declaration
             {
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(atoi(str_tmp), nvl_lex);
@@ -75,14 +75,14 @@ bloco:
                 geraCodigo(NULL, str_tmp);
                 push(labels, temporary_lab);
             }
-            parte_declara_subrotinas_opt
+            routine_declaration
             {
                 aux_lab = pop(labels);
                 sprintf(str_tmp, "%s", aux_lab->item.lab.label);
                 geraCodigo(str_tmp, "NADA");
                 printStack(symbols_table);
             }
-            comando_composto
+            comp_cmd
             {   
                 offset = popStack(symbols_table, nvl_lex);
                 
@@ -101,11 +101,8 @@ bloco:
             }
 ;
 
-parte_declara_rotulos_opt:
-            | parte_declara_rotulos
-;
-
-parte_declara_rotulos:	
+label_declaration:
+            |
             LABEL
             NUMERO
             {
@@ -116,11 +113,11 @@ parte_declara_rotulos:
                 temporary = NULL;
 
             }
-            parte_declara_rotulos_loop
+            label_declaration_lp
             PONTO_E_VIRGULA
 ;
 
-parte_declara_rotulos_loop:
+label_declaration_lp:
             | VIRGULA NUMERO
             {
                 temporary = newLabel(atoi(yytext), nvl_lex);
@@ -129,25 +126,25 @@ parte_declara_rotulos_loop:
                 push(symbols_table, temporary);
                 temporary = NULL;
             }
-            parte_declara_rotulos_loop
+            label_declaration_lp
 ;
 
-parte_declara_vars:  
+var_declaration:  
             { 
                 aux->size = 0;
                 offset = 0;
             } 
-            VAR declara_vars
+            VAR vars
             |
 ;
 
-declara_vars: 
-            declara_var declara_vars 
-            | declara_var
+vars: 
+            var vars 
+            | var
 ;
 
-declara_var:    
-            lista_idents DOIS_PONTOS 
+var:    
+            ident_lists DOIS_PONTOS 
             {
                 if (aux->size) {
                     sprintf(str_tmp, "AMEM %d", aux->size);
@@ -159,11 +156,11 @@ declara_var:
                 }
                 aux->size = 0;
             }
-            tipo 
+            type 
             PONTO_E_VIRGULA
 ;
 
-tipo:   
+type:   
             INTEGER
             {
                 switchType(symbols_table, offset, 7);
@@ -178,8 +175,8 @@ tipo:
             }
 ;
 
-lista_idents:	
-            identificador
+ident_lists:	
+            identificator
             {
                 if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
                     var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
@@ -187,11 +184,11 @@ lista_idents:
                     offset++;
                 }
             }
-            lista_idents_lp
+            ident_lists_lp
 ;
 
-lista_idents_lp:
-            | VIRGULA identificador
+ident_lists_lp:
+            | VIRGULA identificator
             {
                 if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
                     var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
@@ -199,18 +196,18 @@ lista_idents_lp:
                     offset++;
                 }
             }
-            lista_idents_lp
+            ident_lists_lp
 ;
 
-comando_composto: 
-            T_BEGIN comando comando_composto_loop T_END
+comp_cmd: 
+            T_BEGIN cmd comp_cmd_loop T_END
 ;
 
-comando_composto_loop: 
-            | PONTO_E_VIRGULA comando comando_composto_loop
+comp_cmd_loop: 
+            | PONTO_E_VIRGULA cmd comp_cmd_loop
 ; 
 
-comando:
+cmd:
             NUMERO
             {
                 temporary = find(symbols_table, yytext);
@@ -222,24 +219,24 @@ comando:
                     exit(1);
                 }
             }
-            DOIS_PONTOS comando_sem_label
-            | comando_sem_label
+            DOIS_PONTOS unlabeled_cmd
+            | unlabeled_cmd
 ;
 
-comando_sem_label:
-            | chamada_procedimento
-            | chamada_funcao
-            | comando_composto
-            | comando_condicional 
-            | comando_repetitivo
-            | comando_escrita
-            | comando_leitura
-            | atribuicao
-            | desvio
+unlabeled_cmd:
+            | procedure_call
+            | function_call
+            | comp_cmd
+            | cond_cmd 
+            | loop_cmd
+            | write
+            | read
+            | assignment
+            | goto
 ;
 
-comando_condicional:
-            IF expressao
+cond_cmd:
+            IF expression
             {
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(str_tmp, nl);
@@ -250,7 +247,7 @@ comando_condicional:
                 sprintf(str_tmp, "DSVF %s", temporary_lab->item.lab.label);
                 geraCodigo(NULL, str_tmp);
             }
-            THEN comando_sem_label
+            THEN unlabeled_cmd
             {
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(str_tmp, nl);
@@ -265,7 +262,7 @@ comando_condicional:
                 geraCodigo(str_tmp, "NADA");
                 push(labels, temporary_lab);
             } 
-            comando_condicional_else
+            cond_cmd_else
             {
                 temporary = pop(labels);
                 sprintf(str_tmp, "%s", temporary->item.lab.label);
@@ -273,11 +270,11 @@ comando_condicional:
             }
 ;
 
-comando_condicional_else:
-            | ELSE comando_sem_label
+cond_cmd_else:
+            | ELSE unlabeled_cmd
 ;
 
-comando_repetitivo:
+loop_cmd:
             WHILE
             {
                 geraRotulo(str_tmp);
@@ -289,7 +286,7 @@ comando_repetitivo:
                 geraCodigo(temporary_lab->item.lab.label, str_tmp);
                 push(labels, temporary_lab);
             }
-            expressao
+            expression
             {
                 geraRotulo(str_tmp);
                 temporary_lab = newLabel(str_tmp, nl);
@@ -300,7 +297,7 @@ comando_repetitivo:
                 geraCodigo(NULL, str_tmp);
                 push(labels, temporary_lab);
             }
-            DO comando_sem_label
+            DO unlabeled_cmd
             {
                 temporary_lab = pop(labels);
                 aux_lab = pop(labels);
@@ -314,28 +311,28 @@ comando_repetitivo:
 ;
 
 
-comando_escrita:
+write:
             WRITE
             {
                 write = 1;
             }
-            ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
+            ABRE_PARENTESES expressions FECHA_PARENTESES
             {
                 write = 0;
             }
 ;
 
-comando_leitura:
+read:
             READ
-            ABRE_PARENTESES comando_leitura_1 FECHA_PARENTESES
+            ABRE_PARENTESES read_section FECHA_PARENTESES
 ;
 
-comando_leitura_1:
+read_section:
             {
                 sprintf(str_tmp, "LEIT");
                 geraCodigo(NULL, str_tmp);
             }
-            identificador
+            identificator
             {
                 if (!temporary) {
                     yyerror("Variavel nao declarada.");
@@ -350,41 +347,41 @@ comando_leitura_1:
                     geraCodigo(NULL, str_tmp);
                 }
             }
-            comando_leitura_1_loop
+            read_section_lp
 ;
 
-comando_leitura_1_loop:
-            | VIRGULA comando_leitura_1
+read_section_lp:
+            | VIRGULA read_section
 ;
 
-lista_expressoes:
-            expressao
+expressions:
+            expression
             {
                 if (write) {
                     sprintf(str_tmp, "IMPR");
                     geraCodigo(NULL, str_tmp);
                 }
             }
-            lista_expressoes_loop
+            expressions_loop
 ;
 
-lista_expressoes_loop:
-            | VIRGULA expressao
+expressions_loop:
+            | VIRGULA expression
             {
                 if (write) {
                     sprintf(str_tmp, "IMPR");
                     geraCodigo(NULL, str_tmp);
                 }
             }
-            lista_expressoes_loop
+            expressions_loop
 ;
 
-expressao:
-            expressao_simples
+expression:
+            normal_expression
             { 
                 if (proced || funct) count_param++;
             }
-            | expressao_simples IGUAL expressao_simples 
+            | normal_expression IGUAL normal_expression 
             {
                 if (proced || funct) count_param++; 
                 sprintf(str_tmp, "CMIG");
@@ -398,7 +395,7 @@ expressao:
                     }
                 }
             }
-            | expressao_simples DIFERENTE expressao_simples 
+            | normal_expression DIFERENTE normal_expression 
             {
                 if (proced || funct) count_param++;
                 sprintf(str_tmp, "CMDG");
@@ -412,7 +409,7 @@ expressao:
                     }
                 }
             }
-            | expressao_simples MENOR expressao_simples 
+            | normal_expression MENOR normal_expression 
             {
                 if (proced || funct) count_param++; 
                 sprintf(str_tmp, "CMME");
@@ -426,7 +423,7 @@ expressao:
                     }
                 }
             }
-            | expressao_simples MAIOR expressao_simples 
+            | normal_expression MAIOR normal_expression 
             {
                 if (proced || funct) count_param++; 
                 sprintf(str_tmp, "CMMA");
@@ -440,7 +437,7 @@ expressao:
                     }
                 }
             }
-            | expressao_simples MAIOR_IGUAL expressao_simples 
+            | normal_expression MAIOR_IGUAL normal_expression 
             {
                 if (proced || funct) count_param++; 
                 sprintf(str_tmp, "CMAG");
@@ -454,7 +451,7 @@ expressao:
                     }
                 }
             }
-            | expressao_simples MENOR_IGUAL expressao_simples 
+            | normal_expression MENOR_IGUAL normal_expression 
             {
                 if (proced || funct) count_param++; 
                 sprintf(str_tmp, "CMEG");
@@ -470,61 +467,61 @@ expressao:
             }
 ;
  
-expressao_simples:
-            termo expressao_simples_loop
-            | MAIS termo expressao_simples_loop
-            | MENOS termo 
+normal_expression:
+            term normal_expression_lp
+            | MAIS term normal_expression_lp
+            | MENOS term 
             {
                 sprintf(str_tmp, "INVR");
                 geraCodigo(NULL, str_tmp);
             }
-            expressao_simples_loop
+            normal_expression_lp
 ;
 
-expressao_simples_loop:
-            | MAIS termo 
+normal_expression_lp:
+            | MAIS term 
             {
                 sprintf(str_tmp, "SOMA");
                 geraCodigo(NULL, str_tmp);
-            } expressao_simples_loop
-            | MENOS termo 
+            } normal_expression_lp
+            | MENOS term 
             {
                 sprintf(str_tmp, "SUBT");
                 geraCodigo(NULL, str_tmp);
             }
-            expressao_simples_loop 
-            | OR termo 
+            normal_expression_lp 
+            | OR term 
             {
                 sprintf(str_tmp, "DISJ");
                 geraCodigo(NULL, str_tmp);
             }
-            expressao_simples_loop
+            normal_expression_lp
 ;
 
-termo: 
-            fator termo_loop
+term: 
+            element term_lp
 ;
 
-termo_loop:
-            | VEZES fator 
+term_lp:
+            | VEZES element 
             {
                 sprintf(str_tmp, "MULT");
                 geraCodigo(NULL, str_tmp);
-            } termo_loop
-            | DIV fator 
+            } term_lp
+            | DIV element 
             {
                 sprintf(str_tmp, "DIVI");
                 geraCodigo(NULL, str_tmp);
-            } termo_loop
-            | AND fator 
+            } term_lp
+            | AND element 
             {
                 sprintf(str_tmp, "CONJ");
                 geraCodigo(NULL, str_tmp);
             }
 ;
 
-fator: 
-            identificador
+element: 
+            identificator
             {
 
                 if (temporary) {
@@ -580,21 +577,21 @@ fator:
                 sprintf(str_tmp, "CRCT 0");
                 geraCodigo(NULL, str_tmp);
             }
-            | chamada_funcao
-            | ABRE_PARENTESES expressao FECHA_PARENTESES
-            | NOT fator 
+            | function_call
+            | ABRE_PARENTESES expression FECHA_PARENTESES
+            | NOT element 
             {
                 geraCodigo(NULL, "NEGA");
             }
             |
 ;
 
-atribuicao:  
-            identificador
+assignment:  
+            identificator
             {
                 temporary_var = temporary;
             }
-            ATRIBUICAO expressao
+            ATRIBUICAO expression
             {
                 if (!temporary_var) {
                     yyerror("Variavel nao declarada.");
@@ -618,31 +615,28 @@ atribuicao:
             }
 ;
 
-parte_declara_subrotinas_opt:
+routine_declaration:
             |
             {
                 nl++;
                 nvl_lex++;
                 offset = 0;
             }
-            parte_declara_subrotinas
+            routine_declaration_lp
             {
                 nl--;
                 nvl_lex--;
             }
 ;
 
-parte_declara_subrotinas:
-            declaracao_procedimento PONTO_E_VIRGULA parte_declara_subrotinas_loop
-            | declaracao_funcao PONTO_E_VIRGULA parte_declara_subrotinas_loop
+routine_declaration_lp:
+            procedure_declaration PONTO_E_VIRGULA routine_declaration_lp
+            | function_declaration PONTO_E_VIRGULA routine_declaration_lp
+            |
 ;
 
-parte_declara_subrotinas_loop:
-            | parte_declara_subrotinas
-;
-
-declaracao_procedimento:
-            PROCEDURE identificador
+procedure_declaration:
+            PROCEDURE identificator
             {
                 proced = newProcedure(yytext, nvl_lex);
                 
@@ -652,7 +646,7 @@ declaracao_procedimento:
                 sprintf(str_tmp, "ENPR %d", nvl_lex);
                 geraCodigo(proced->item.func.label, str_tmp);
             }
-            parametros_formais_opt PONTO_E_VIRGULA
+            parameters PONTO_E_VIRGULA
             {
                 proced->item.func.num_param = parameters->size;
                 offset = - 4;
@@ -677,11 +671,11 @@ declaracao_procedimento:
                 offset = 0;
                 proced = NULL;
             }
-            bloco
+            block
 ;
 
-chamada_procedimento:
-            identificador
+procedure_call:
+            identificator
             {
                 if (!temporary) {
                     yyerror("Procedimento nao declarado.");
@@ -691,7 +685,7 @@ chamada_procedimento:
                 parameters->size = 0;
                 count_param = 0;
             }
-            ABRE_PARENTESES lista_expressoes
+            ABRE_PARENTESES expressions
             {
                 sprintf(str_tmp, "CHPR %s, %d", proced->item.func.label, nvl_lex);
                 geraCodigo(NULL, str_tmp);
@@ -699,7 +693,7 @@ chamada_procedimento:
             }
             FECHA_PARENTESES
             |
-            identificador
+            identificator
             {
                 if (!temporary) {
                     yyerror("Procedimento nao declarado.");
@@ -715,11 +709,11 @@ chamada_procedimento:
             }
 ;
 
-declaracao_funcao: 
+function_declaration: 
             FUNCTION
             {
             }
-            identificador
+            identificator
             {
                 funct = newFunction(0, yytext, nvl_lex);
                 geraRotulo(str_tmp);
@@ -728,7 +722,7 @@ declaracao_funcao:
                 sprintf(str_tmp,"ENPR %d", nvl_lex);
                 geraCodigo(funct->item.func.label, str_tmp);
             }
-            parametros_formais_opt 
+            parameters 
             {
                 funct->item.func.num_param = parameters->size;
                 offset = - 4;
@@ -747,7 +741,7 @@ declaracao_funcao:
                 parameters->size = 0;
                 offset = 0;
             }
-            DOIS_PONTOS tipo
+            DOIS_PONTOS type
             {
                 int j;
                 if (!strcmp(yytext, "boolean")) {
@@ -768,11 +762,11 @@ declaracao_funcao:
                     }
                 }
             } PONTO_E_VIRGULA 
-            bloco
+            block
 ;
 
-chamada_funcao:
-            identificador
+function_call:
+            identificator
             {
                 call_flag = 1;
                 if (!temporary) {
@@ -784,7 +778,7 @@ chamada_funcao:
                 parameters->size = 0;
                 count_param = 0;
             }
-            ABRE_PARENTESES lista_expressoes
+            ABRE_PARENTESES expressions
             { 	
                 sprintf(str_tmp, "CHPR %s, %d", funct->item.func.label, nvl_lex);
                 geraCodigo(NULL, str_tmp);
@@ -794,20 +788,16 @@ chamada_funcao:
             FECHA_PARENTESES
 ;
 
-parametros_formais_opt:
-            | parametros_formais
+parameters:
+            | ABRE_PARENTESES parameters_section parameters_lp FECHA_PARENTESES
 ;
 
-parametros_formais:
-            ABRE_PARENTESES secao_parametros_formais parametros_formais_loop FECHA_PARENTESES
+parameters_lp:
+            | PONTO_E_VIRGULA parameters_section parameters_lp
 ;
 
-parametros_formais_loop:
-            | PONTO_E_VIRGULA secao_parametros_formais parametros_formais_loop
-;
-
-secao_parametros_formais: 
-            lista_idents
+parameters_section: 
+            ident_lists
             {
                 for (i_index = 0; i_index < aux->size; i_index++) {
                     temporary = &(aux->head[i_index]);
@@ -816,8 +806,8 @@ secao_parametros_formais:
                 }
                 aux->size = 0;
             }
-            DOIS_PONTOS tipo
-            | VAR lista_idents
+            DOIS_PONTOS type
+            | VAR ident_lists
             {
                 for (i_index = 0; i_index < aux->size; i_index++) {
                     temporary = &(aux->head[i_index]);
@@ -827,10 +817,10 @@ secao_parametros_formais:
                 }
                 aux->size = 0;
             }
-            DOIS_PONTOS tipo
+            DOIS_PONTOS type
 ;
 
-desvio: 
+goto: 
             GOTO NUMERO
             {
                 temporary = find(symbols_table, yytext);
@@ -844,7 +834,7 @@ desvio:
             }
 ;
 
-identificador:
+identificator:
             IDENT
             {
                 temporary = find(symbols_table, yytext);
