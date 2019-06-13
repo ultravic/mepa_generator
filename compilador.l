@@ -163,13 +163,6 @@ false       {   simbolo = simb_false;
                 return FALSE;
             }
 
-"/"         {   simbolo = simb_slash;
-                strncpy(token, yytext, TAM_TOKEN);
-                IMPRIME("/ ");
-                return SLASH;
-            }
-
-
 ":="      {   simbolo = simb_atribuicao;  
             strncpy (token, yytext, TAM_TOKEN);
             IMPRIME(" atribuicao  ");
@@ -240,12 +233,6 @@ false       {   simbolo = simb_false;
             strncpy(token, yytext, TAM_TOKEN);
             IMPRIME(" vezes ");
             return VEZES;
-        }
-
-".."    {   simbolo = simb_ponto_ponto;
-            strncpy(token, yytext, TAM_TOKEN);
-            IMPRIME(" ponto_ponto ");
-            return PONTO_PONTO;
         }
 
 "="      {   simbolo = simb_igual;

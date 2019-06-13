@@ -35,7 +35,7 @@ int count_param;
 int i_index, j_index;;
 int nl;
 
-char s[32];
+char str_tmp[32];
 
 %}
 
@@ -43,8 +43,8 @@ char s[32];
 %token VIRGULA PONTO_E_VIRGULA DOIS_PONTOS PONTO
 %token T_BEGIN T_END VAR IDENT ATRIBUICAO
 %token OR AND NOT MAIOR MENOR MAIOR_IGUAL MENOR_IGUAL
-%token IGUAL WRITE READ SLASH VEZES NUMERO MAIS MENOS
-%token PONTO_PONTO WHILE IF THEN ELSE DO DIV
+%token IGUAL WRITE READ VEZES NUMERO MAIS MENOS
+%token WHILE IF THEN ELSE DO DIV
 %token PROCEDURE FUNCTION LABEL DIFERENTE GOTO
 %token INTEGER BOOLEAN TRUE FALSE 
 
@@ -66,20 +66,20 @@ bloco:
             parte_declara_rotulos_opt
             parte_declara_vars
             {
-                geraRotulo(s);
-                temporary_lab = newLabel(atoi(s), nvl_lex);
+                geraRotulo(str_tmp);
+                temporary_lab = newLabel(atoi(str_tmp), nvl_lex);
 
-                strcpy(temporary_lab->item.lab.label, s);
-                sprintf(s, "DSVS %s", temporary_lab->item.lab.label);
+                strcpy(temporary_lab->item.lab.label, str_tmp);
+                sprintf(str_tmp, "DSVS %s", temporary_lab->item.lab.label);
 
-                geraCodigo(NULL, s);
+                geraCodigo(NULL, str_tmp);
                 push(labels, temporary_lab);
             }
             parte_declara_subrotinas_opt
             {
                 aux_lab = pop(labels);
-                sprintf(s, "%s", aux_lab->item.lab.label);
-                geraCodigo(s, "NADA");
+                sprintf(str_tmp, "%s", aux_lab->item.lab.label);
+                geraCodigo(str_tmp, "NADA");
                 printStack(symbols_table);
             }
             comando_composto
@@ -87,15 +87,15 @@ bloco:
                 offset = popStack(symbols_table, nvl_lex);
                 
                 if (offset) {
-                    sprintf(s,"DMEM %d", offset);
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "DMEM %d", offset);
+                    geraCodigo(NULL, str_tmp);
                 }
 
                 if (symbols_table->size) {
                     temporary = &(symbols_table->head[symbols_table->size-1]);
                     if (temporary->category == PROCEDIMENTO || temporary->category == FUNCAO) {
-                        sprintf(s, "RTPR %d, %d", nvl_lex, temporary->item.func.num_param);	
-                        geraCodigo(NULL, s);
+                        sprintf(str_tmp, "RTPR %d, %d", nvl_lex, temporary->item.func.num_param);	
+                        geraCodigo(NULL, str_tmp);
                     }
                 }
             }
@@ -133,10 +133,6 @@ parte_declara_rotulos_loop:
 ;
 
 parte_declara_vars:  
-                    var 
-;
-
-var:        
             { 
                 aux->size = 0;
                 offset = 0;
@@ -151,20 +147,20 @@ declara_vars:
 ;
 
 declara_var:    
-                lista_idents DOIS_PONTOS 
-                {
-                    if (aux->size) {
-                        sprintf(s, "AMEM %d", aux->size);
-                        geraCodigo(NULL, s);
-                    }
-                    offset = aux->size;
-                    for (i_index = 0; i_index < aux->size; i_index++) {
-                        push(symbols_table, &(aux->head[i_index]));
-                    }
-                    aux->size = 0;
+            lista_idents DOIS_PONTOS 
+            {
+                if (aux->size) {
+                    sprintf(str_tmp, "AMEM %d", aux->size);
+                    geraCodigo(NULL, str_tmp);
                 }
-                tipo 
-                PONTO_E_VIRGULA
+                offset = aux->size;
+                for (i_index = 0; i_index < aux->size; i_index++) {
+                    push(symbols_table, &(aux->head[i_index]));
+                }
+                aux->size = 0;
+            }
+            tipo 
+            PONTO_E_VIRGULA
 ;
 
 tipo:   
@@ -183,50 +179,51 @@ tipo:
 ;
 
 lista_idents:	
-    identificador
-    {
-        if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
-            var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
-            push(aux, var_label);
-            offset++;
-        }
-    }
-    lista_idents_lp
+            identificador
+            {
+                if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
+                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
+                    push(aux, var_label);
+                    offset++;
+                }
+            }
+            lista_idents_lp
 ;
 
 lista_idents_lp:
-    | VIRGULA identificador
-    {
-        if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
-            var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
-            push(aux, var_label);
-            offset++;
-        }
-    }
-    lista_idents_lp
+            | VIRGULA identificador
+            {
+                if (strcmp(yytext, "input") && strcmp(yytext, "output")) {
+                    var_label = newVariable(1, yytext, nvl_lex, offset, SIMPLES);
+                    push(aux, var_label);
+                    offset++;
+                }
+            }
+            lista_idents_lp
 ;
 
-comando_composto: T_BEGIN comando comando_composto_loop T_END
+comando_composto: 
+            T_BEGIN comando comando_composto_loop T_END
 ;
 
 comando_composto_loop: 
-                | PONTO_E_VIRGULA comando comando_composto_loop
+            | PONTO_E_VIRGULA comando comando_composto_loop
 ; 
 
 comando:
-        NUMERO
-        {
-            temporary = find(symbols_table, yytext);
-            if (temporary) {
-                sprintf(s, "ENRT %d %d", nvl_lex, checkOffset(symbols_table, nvl_lex));
-                geraCodigo(temporary->item.lab.label, s);
-            } else {
-                yyerror("label nao declarado.\n");
-                exit(1);
+            NUMERO
+            {
+                temporary = find(symbols_table, yytext);
+                if (temporary) {
+                    sprintf(str_tmp, "ENRT %d %d", nvl_lex, checkOffset(symbols_table, nvl_lex));
+                    geraCodigo(temporary->item.lab.label, str_tmp);
+                } else {
+                    yyerror("label nao declarado.\n");
+                    exit(1);
+                }
             }
-        }
-        DOIS_PONTOS comando_sem_label
-        | comando_sem_label
+            DOIS_PONTOS comando_sem_label
+            | comando_sem_label
 ;
 
 comando_sem_label:
@@ -244,35 +241,35 @@ comando_sem_label:
 comando_condicional:
             IF expressao
             {
-                geraRotulo(s);
-                temporary_lab = newLabel(s, nl);
+                geraRotulo(str_tmp);
+                temporary_lab = newLabel(str_tmp, nl);
 
-                strcpy(temporary_lab->item.lab.label, s);
+                strcpy(temporary_lab->item.lab.label, str_tmp);
                 push(labels, temporary_lab);
 
-                sprintf(s, "DSVF %s", temporary_lab->item.lab.label);
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "DSVF %s", temporary_lab->item.lab.label);
+                geraCodigo(NULL, str_tmp);
             }
             THEN comando_sem_label
             {
-                geraRotulo(s);
-                temporary_lab = newLabel(s, nl);
+                geraRotulo(str_tmp);
+                temporary_lab = newLabel(str_tmp, nl);
 
-                strcpy(temporary_lab->item.lab.label, s);
-                sprintf(s, "DSVS %s", temporary_lab->item.lab.label);
+                strcpy(temporary_lab->item.lab.label, str_tmp);
+                sprintf(str_tmp, "DSVS %s", temporary_lab->item.lab.label);
 
-                geraCodigo(NULL, s);
+                geraCodigo(NULL, str_tmp);
                 aux_lab = pop(labels);
 
-                sprintf(s, "%s", aux_lab->item.lab.label);
-                geraCodigo(s, "NADA");
+                sprintf(str_tmp, "%s", aux_lab->item.lab.label);
+                geraCodigo(str_tmp, "NADA");
                 push(labels, temporary_lab);
             } 
             comando_condicional_else
             {
                 temporary = pop(labels);
-                sprintf(s, "%s", temporary->item.lab.label);
-                geraCodigo(s, "NADA");
+                sprintf(str_tmp, "%s", temporary->item.lab.label);
+                geraCodigo(str_tmp, "NADA");
             }
 ;
 
@@ -283,24 +280,24 @@ comando_condicional_else:
 comando_repetitivo:
             WHILE
             {
-                geraRotulo(s);
-                temporary_lab = newLabel(s, nl);
+                geraRotulo(str_tmp);
+                temporary_lab = newLabel(str_tmp, nl);
 
-                strcpy(temporary_lab->item.lab.label, s);
-                sprintf(s, "NADA");
+                strcpy(temporary_lab->item.lab.label, str_tmp);
+                sprintf(str_tmp, "NADA");
 
-                geraCodigo(temporary_lab->item.lab.label, s);
+                geraCodigo(temporary_lab->item.lab.label, str_tmp);
                 push(labels, temporary_lab);
             }
             expressao
             {
-                geraRotulo(s);
-                temporary_lab = newLabel(s, nl);
+                geraRotulo(str_tmp);
+                temporary_lab = newLabel(str_tmp, nl);
 
-                strcpy(temporary_lab->item.lab.label, s);
-                sprintf(s, "DSVF %s", temporary_lab->item.lab.label);
+                strcpy(temporary_lab->item.lab.label, str_tmp);
+                sprintf(str_tmp, "DSVF %s", temporary_lab->item.lab.label);
 
-                geraCodigo(NULL, s);
+                geraCodigo(NULL, str_tmp);
                 push(labels, temporary_lab);
             }
             DO comando_sem_label
@@ -308,35 +305,35 @@ comando_repetitivo:
                 temporary_lab = pop(labels);
                 aux_lab = pop(labels);
 
-                sprintf(s, "DSVS %s", aux_lab->item.lab.label);
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "DSVS %s", aux_lab->item.lab.label);
+                geraCodigo(NULL, str_tmp);
 
-                sprintf(s, "%s", temporary_lab->item.lab.label);
-                geraCodigo(s, "NADA");
+                sprintf(str_tmp, "%s", temporary_lab->item.lab.label);
+                geraCodigo(str_tmp, "NADA");
             }
 ;
 
 
 comando_escrita:
-                WRITE
-                {
-                    write = 1;
-                }
-                ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
-                {
-                    write = 0;
-                }
+            WRITE
+            {
+                write = 1;
+            }
+            ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
+            {
+                write = 0;
+            }
 ;
 
 comando_leitura:
-                READ
-                ABRE_PARENTESES comando_leitura_1 FECHA_PARENTESES
+            READ
+            ABRE_PARENTESES comando_leitura_1 FECHA_PARENTESES
 ;
 
 comando_leitura_1:
             {
-                sprintf(s, "LEIT");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "LEIT");
+                geraCodigo(NULL, str_tmp);
             }
             identificador
             {
@@ -345,12 +342,12 @@ comando_leitura_1:
                     exit(1);
                 }
                 if (temporary->item.simple.parameter == REFERENCIA) {
-                    sprintf(s, "ARMI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "ARMI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                    geraCodigo(NULL, str_tmp);
                 }
                 else if (temporary->item.simple.parameter == VALOR || temporary->item.simple.parameter == SIMPLES) {
-                    sprintf(s, "ARMZ %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "ARMZ %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                    geraCodigo(NULL, str_tmp);
                 }
             }
             comando_leitura_1_loop
@@ -364,8 +361,8 @@ lista_expressoes:
             expressao
             {
                 if (write) {
-                    sprintf(s, "IMPR");
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "IMPR");
+                    geraCodigo(NULL, str_tmp);
                 }
             }
             lista_expressoes_loop
@@ -375,8 +372,8 @@ lista_expressoes_loop:
             | VIRGULA expressao
             {
                 if (write) {
-                    sprintf(s, "IMPR");
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "IMPR");
+                    geraCodigo(NULL, str_tmp);
                 }
             }
             lista_expressoes_loop
@@ -390,8 +387,8 @@ expressao:
             | expressao_simples IGUAL expressao_simples 
             {
                 if (proced || funct) count_param++; 
-                sprintf(s, "CMIG");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMIG");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -404,8 +401,8 @@ expressao:
             | expressao_simples DIFERENTE expressao_simples 
             {
                 if (proced || funct) count_param++;
-                sprintf(s, "CMDG");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMDG");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -418,8 +415,8 @@ expressao:
             | expressao_simples MENOR expressao_simples 
             {
                 if (proced || funct) count_param++; 
-                sprintf(s, "CMME");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMME");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -432,8 +429,8 @@ expressao:
             | expressao_simples MAIOR expressao_simples 
             {
                 if (proced || funct) count_param++; 
-                sprintf(s, "CMMA");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMMA");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -446,8 +443,8 @@ expressao:
             | expressao_simples MAIOR_IGUAL expressao_simples 
             {
                 if (proced || funct) count_param++; 
-                sprintf(s, "CMAG");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMAG");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -460,8 +457,8 @@ expressao:
             | expressao_simples MENOR_IGUAL expressao_simples 
             {
                 if (proced || funct) count_param++; 
-                sprintf(s, "CMEG");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CMEG");
+                geraCodigo(NULL, str_tmp);
                 if (temporary_var) {
                     if (temporary_var->category == VS) {
                         if (temporary_var->item.simple.type != 8) {
@@ -478,8 +475,8 @@ expressao_simples:
             | MAIS termo expressao_simples_loop
             | MENOS termo 
             {
-                sprintf(s, "INVR");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "INVR");
+                geraCodigo(NULL, str_tmp);
             }
             expressao_simples_loop
 ;
@@ -487,19 +484,19 @@ expressao_simples:
 expressao_simples_loop:
             | MAIS termo 
             {
-                sprintf(s, "SOMA");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "SOMA");
+                geraCodigo(NULL, str_tmp);
             } expressao_simples_loop
             | MENOS termo 
             {
-                sprintf(s, "SUBT");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "SUBT");
+                geraCodigo(NULL, str_tmp);
             }
             expressao_simples_loop 
             | OR termo 
             {
-                sprintf(s, "DISJ");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "DISJ");
+                geraCodigo(NULL, str_tmp);
             }
             expressao_simples_loop
 ;
@@ -511,18 +508,18 @@ termo:
 termo_loop:
             | VEZES fator 
             {
-                sprintf(s, "MULT");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "MULT");
+                geraCodigo(NULL, str_tmp);
             } termo_loop
             | DIV fator 
             {
-                sprintf(s, "DIVI");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "DIVI");
+                geraCodigo(NULL, str_tmp);
             } termo_loop
             | AND fator 
             {
-                sprintf(s, "CONJ");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CONJ");
+                geraCodigo(NULL, str_tmp);
             }
 ;
 
@@ -541,28 +538,28 @@ fator:
                     }
                     if ((proced) && proced->item.func.parameters[(proced->item.func.num_param - 1) - count_param].parameter == REFERENCIA) {
                         if (temporary->item.simple.parameter == REFERENCIA) {
-                            sprintf(s, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                            geraCodigo(NULL, s);
+                            sprintf(str_tmp, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                            geraCodigo(NULL, str_tmp);
                         } else {
-                            sprintf(s, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                            geraCodigo(NULL, s);
+                            sprintf(str_tmp, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                            geraCodigo(NULL, str_tmp);
                         }
                     } else {                        
                         if ((funct) && funct->item.func.parameters[count_param].parameter == REFERENCIA) {
                             if (call_flag) {
-                                sprintf(s, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                                geraCodigo(NULL, s);
+                                sprintf(str_tmp, "CREN %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                                geraCodigo(NULL, str_tmp);
                             } else {
-                                sprintf(s, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                                geraCodigo(NULL, s);
+                                sprintf(str_tmp, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                                geraCodigo(NULL, str_tmp);
                             }
                         } else {
                             if (temporary->item.simple.parameter == REFERENCIA) {
-                                sprintf(s, "CRVI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                                geraCodigo(NULL, s);
+                                sprintf(str_tmp, "CRVI %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                                geraCodigo(NULL, str_tmp);
                             } else {
-                                sprintf(s, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
-                                geraCodigo(NULL, s);
+                                sprintf(str_tmp, "CRVL %d, %d", temporary->nvl_lex, temporary->item.simple.offset);
+                                geraCodigo(NULL, str_tmp);
                             }
                         }
                     }
@@ -570,18 +567,18 @@ fator:
             }          
             | NUMERO 
             {
-                sprintf(s, "CRCT %s", yytext);
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CRCT %s", yytext);
+                geraCodigo(NULL, str_tmp);
             }
             | TRUE
             {
-                sprintf(s, "CRCT 1");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CRCT 1");
+                geraCodigo(NULL, str_tmp);
             }
             | FALSE
             {
-                sprintf(s, "CRCT 0");
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CRCT 0");
+                geraCodigo(NULL, str_tmp);
             }
             | chamada_funcao
             | ABRE_PARENTESES expressao FECHA_PARENTESES
@@ -605,15 +602,15 @@ atribuicao:
                 }
             
                 if (temporary_var->category == FUNCAO) {
-                    sprintf(s, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.func.offset);
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.func.offset);
+                    geraCodigo(NULL, str_tmp);
                 } else {
                     if (temporary_var->item.simple.parameter == REFERENCIA) {
-                        sprintf(s, "ARMI %d, %d", temporary_var->nvl_lex, temporary_var->item.simple.offset);
-                        geraCodigo(NULL, s);
+                        sprintf(str_tmp, "ARMI %d, %d", temporary_var->nvl_lex, temporary_var->item.simple.offset);
+                        geraCodigo(NULL, str_tmp);
                     } else {
-                        sprintf(s, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.simple.offset);
-                        geraCodigo(NULL, s);
+                        sprintf(str_tmp, "ARMZ %d, %d" , temporary_var->nvl_lex, temporary_var->item.simple.offset);
+                        geraCodigo(NULL, str_tmp);
                     }
                 }
                 temporary_var = NULL;
@@ -649,11 +646,11 @@ declaracao_procedimento:
             {
                 proced = newProcedure(yytext, nvl_lex);
                 
-                geraRotulo(s);
-                strcpy(proced->item.func.label, s);
+                geraRotulo(str_tmp);
+                strcpy(proced->item.func.label, str_tmp);
 
-                sprintf(s, "ENPR %d", nvl_lex);
-                geraCodigo(proced->item.func.label, s);
+                sprintf(str_tmp, "ENPR %d", nvl_lex);
+                geraCodigo(proced->item.func.label, str_tmp);
             }
             parametros_formais_opt PONTO_E_VIRGULA
             {
@@ -696,8 +693,8 @@ chamada_procedimento:
             }
             ABRE_PARENTESES lista_expressoes
             {
-                sprintf(s, "CHPR %s, %d", proced->item.func.label, nvl_lex);
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CHPR %s, %d", proced->item.func.label, nvl_lex);
+                geraCodigo(NULL, str_tmp);
                 proced = NULL;
             }
             FECHA_PARENTESES
@@ -712,8 +709,8 @@ chamada_procedimento:
                 parameters->size = 0;
                 count_param = 0;
 
-                sprintf(s, "CHPR %s, %d", proced->item.func.label, nvl_lex);
-                geraCodigo(NULL, s);
+                sprintf(str_tmp, "CHPR %s, %d", proced->item.func.label, nvl_lex);
+                geraCodigo(NULL, str_tmp);
                 proced = NULL;
             }
 ;
@@ -725,11 +722,11 @@ declaracao_funcao:
             identificador
             {
                 funct = newFunction(0, yytext, nvl_lex);
-                geraRotulo(s);
-                strcpy(funct->item.func.label, s);
+                geraRotulo(str_tmp);
+                strcpy(funct->item.func.label, str_tmp);
 
-                sprintf(s,"ENPR %d", nvl_lex);
-                geraCodigo(funct->item.func.label, s);
+                sprintf(str_tmp,"ENPR %d", nvl_lex);
+                geraCodigo(funct->item.func.label, str_tmp);
             }
             parametros_formais_opt 
             {
@@ -775,26 +772,26 @@ declaracao_funcao:
 ;
 
 chamada_funcao:
-        identificador
-        {
-            call_flag = 1;
-            if (!temporary) {
-                yyerror("funcao nao declarada.");
-                exit(1);
+            identificador
+            {
+                call_flag = 1;
+                if (!temporary) {
+                    yyerror("funcao nao declarada.");
+                    exit(1);
+                }
+                geraCodigo(NULL, "AMEM 1");
+                funct = temporary;
+                parameters->size = 0;
+                count_param = 0;
             }
-            geraCodigo(NULL, "AMEM 1");
-            funct = temporary;
-            parameters->size = 0;
-            count_param = 0;
-        }
-        ABRE_PARENTESES lista_expressoes
-        { 	
-            sprintf(s, "CHPR %s, %d", funct->item.func.label, nvl_lex);
-            geraCodigo(NULL, s);
-            funct = NULL;
-            call_flag = 0;
-        }
-        FECHA_PARENTESES
+            ABRE_PARENTESES lista_expressoes
+            { 	
+                sprintf(str_tmp, "CHPR %s, %d", funct->item.func.label, nvl_lex);
+                geraCodigo(NULL, str_tmp);
+                funct = NULL;
+                call_flag = 0;
+            }
+            FECHA_PARENTESES
 ;
 
 parametros_formais_opt:
@@ -838,8 +835,8 @@ desvio:
             {
                 temporary = find(symbols_table, yytext);
                 if (temporary) {
-                    sprintf(s, "DSVR %s, %d, %d", temporary->item.lab.label, temporary->nvl_lex, nvl_lex);
-                    geraCodigo(NULL, s);
+                    sprintf(str_tmp, "DSVR %s, %d, %d", temporary->item.lab.label, temporary->nvl_lex, nvl_lex);
+                    geraCodigo(NULL, str_tmp);
                 } else {
                     yyerror("Label nao declarado.");
                     exit(1);
@@ -848,10 +845,10 @@ desvio:
 ;
 
 identificador:
-        IDENT
-        {
-            temporary = find(symbols_table, yytext);
-        }
+            IDENT
+            {
+                temporary = find(symbols_table, yytext);
+            }
 ;
 
 %%
@@ -883,8 +880,6 @@ int main (int argc, char** argv) {
     yyin=fp;
     yyparse();
     fclose(fp);
-
-    printStack(symbols_table);
 
     return 0;
 }
